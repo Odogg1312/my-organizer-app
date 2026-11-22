@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Organizer</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #172033;
+      background: #f3f5f9;
+    }
+    header {
+      padding: 22px;
+      color: white;
+      background: #3157d5;
+    }
+    header h1 { margin: 0 0 6px; }
+    header p { margin: 0; opacity: .9; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+    }
+    button, input, textarea {
+      font: inherit;
+    }
+    button {
+      padding: 9px 13px;
+      border: 0;
+      border-radius: 7px;
+      color: white;
+      background: #3157d5;
+      cursor: pointer;
+    }
+    button:hover { background: #2444b2; }
+    button.secondary { color: #172033; background: #e8ebf2; }
+    button.danger { background: #b83232; }
+    nav button { color: #172033; background: #eef0f5; }
+    nav button.active { color: white; background: #3157d5; }
+    main {
+      width: min(950px, 100%);
+      margin: 22px auto;
+      padding: 0 14px;
+    }
+    section.panel {
+      display: none;
+      padding: 20px;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 2px 10px #17203312;
+    }
+    section.panel.active { display: block; }
+    h2 { margin-top: 0; }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 18px;
+    }
+    input, textarea {
+      min-width: 150px;
+      padding: 10px;
+      border: 1px solid #cbd1dc;
+      border-radius: 7px;
+    }
+    textarea { width: 100%; min-height: 220px; resize: vertical; }
+    .item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 0;
+      border-top: 1px solid #e5e7ec;
+    }
+    .item-details { flex: 1; min-width: 180px; }
+    .item-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .muted { color: #667085; font-size: .9rem; }
+    .calendar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    .calendar > div, .calendar > button {
+      min-height: 48px;
+      padding: 8px 4px;
+      text-align: center;
+    }
+    .calendar .weekday {
+      min-height: auto;
+      color: #667085;
+      font-size: .85rem;
+      font-weight: bold;
+    }
+    .calendar > button {
+      color: #172033;
+      background: #eef0f5;
+    }
+    .calendar > button.has-reminder { background: #dce5ff; }
+    .calendar > button.today { outline: 2px solid #3157d5; }
+    .status { min-height: 1.4em; color: #3157d5; }
+    @media (max-width: 550px) {
+      section.panel { padding: 15px; }
+      .calendar > div, .calendar > button { min-height: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Organizer</h1>
+    <p>Reminders, calendar, timer, notes, and logins in one place.</p>
+  </header>
+
+  <nav aria-label="App sections">
+    <button class="active" data-page="reminders">Reminders</button>
+    <button data-page="calendar">Calendar</button>
+    <button data-page="timer">Timer</button>
+    <button data-page="notes">Notes</button>
+    <button data-page="vault">Password Vault</button>
+  </nav>
+
+  <main>
+    <section class="panel active" id="reminders">
+      <h2>Reminders</h2>
+      <form id="reminder-form">
+        <input id="reminder-title" placeholder="What should you remember?" required>
+        <input id="reminder-date" type="date" required>
+        <input id="reminder-time" type="time" required>
+        <button type="submit">Add reminder</button>
+      </form>
+      <p class="muted">Browser notifications work while this page is open. Allow notifications when your browser asks.</p>
+      <div id="reminder-list"></div>
+    </section>
+
+    <section class="panel" id="calendar">
+      <h2>Calendar</h2>
+      <div class="calendar-head">
+        <button class="secondary" id="previous-month">Previous</button>
+        <strong id="month-label"></strong>
+        <button class="secondary" id="next-month">Next</button>
+      </div>
+      <div class="calendar" id="calendar-grid"></div>
+      <p class="muted">Days with reminders are highlighted. Click a day to use it in the reminder form.</p>
+    </section>
+
+    <section class="panel" id="timer">
+      <h2>Timer</h2>
+      <form id="timer-form">
+        <input id="timer-minutes" type="number" min="0" max="999" value="5" aria-label="Minutes">
+        <label for="timer-minutes">minutes</label>
+        <input id="timer-seconds" type="number" min="0" max="59" value="0" aria-label="Seconds">
+        <label for="timer-seconds">seconds</label>
+        <button type="submit">Set timer</button>
+      </form>
+      <h1 id="timer-display">05:00</h1>
+      <button id="timer-start">Start</button>
+      <button class="secondary" id="timer-pause">Pause</button>
+      <button class="secondary" id="timer-reset">Reset</button>
+      <p id="timer-status" class="status"></p>
+    </section>
+
+    <section class="panel" id="notes">
+      <h2>Notes</h2>
+      <p class="muted">Write a workout plan, shopping list, or anything else. It saves automatically in this browser.</p>
+      <textarea id="notes-text" placeholder="Write your notes here..."></textarea>
+      <p id="notes-status" class="status"></p>
+    </section>
+
+    <section class="panel" id="vault">
+      <h2>Password Vault</h2>
+      <p class="muted">Your vault is encrypted with your master password. Use a strong password and don't forget it.</p>
+      <form id="vault-unlock-form">
+        <input id="master-password" type="password" placeholder="Master password" required autocomplete="current-password">
+        <button id="vault-submit" type="submit">Set up vault</button>
+        <button class="secondary" id="vault-lock" type="button" hidden>Lock vault</button>
+      </form>
+      <p id="vault-status" class="status" role="status"></p>
+      <div id="vault-content" hidden>
+        <form id="login-form">
+          <input id="login-site" placeholder="Website or service" required>
+          <input id="login-username" placeholder="Username or email" required>
+          <input id="login-password" type="password" placeholder="Password" required>
+          <button type="submit">Save login</button>
+        </form>
+        <div id="login-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "myOrganizerData";
+    const VAULT_KEY = "myOrganizerEncryptedVault";
+    const $ = (selector) => document.querySelector(selector);
+
+    function loadData() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { reminders: [], notes: "" };
+      } catch {
+        return { reminders: [], notes: "" };
+      }
+    }
+
+    let data = loadData();
+    let vaultEntries = [];
+    let vaultKey = null;
+    let calendarDate = new Date();
+    let timerLength = 300;
+    let timerRemaining = timerLength;
+    let timerInterval = null;
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function makeId() {
+      return (crypto.randomUUID && crypto.randomUUID()) ||
+        Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+
+    function showPage(page) {
+      document.querySelectorAll("section.panel").forEach((section) => {
+        section.classList.toggle("active", section.id === page);
+      });
+      document.querySelectorAll("nav button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.page === page);
+      });
+      if (page === "calendar") renderCalendar();
+    }
+
+    document.querySelectorAll("nav button").forEach((button) => {
+      button.addEventListener("click", () => showPage(button.dataset.page));
+    });
+
+    function renderReminders() {
+      const list = $("#reminder-list");
+      list.replaceChildren();
+
+      const reminders = [...data.reminders].sort((a, b) =>
+        (a.date + a.time).localeCompare(b.date + b.time)
+      );
+
+      if (!reminders.length) {
+        list.textContent = "No reminders yet.";
+        return;
+      }
+
+      reminders.forEach((reminder) => {
+        const row = document.createElement("div");
+        row.className = "item";
+
+        const details = document.createElement("div");
+        details.className = "item-details";
+        const title = document.createElement("strong");
+        title.textContent = reminder.title;
+        const when = document.createElement("div");
+        when.className = "muted";
+        when.textContent = reminder.date + " at " + reminder.time;
+        details.append(title, when);
+
+        const remove = document.createElement("button");
+        remove.className = "danger";
+        remove.textContent = "Delete";
+        remove.addEventListener("click", () => {
+          data.reminders = data.reminders.filter((item) => item.id !== reminder.id);
+          saveData();
+          renderReminders();
+          renderCalendar();
+        });
+
+        row.append(details, remove);
+        list.append(row);
+      });
+    }
+
+    $("#reminder-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const title = $("#reminder-title").value.trim();
+      const date = $("#reminder-date").value;
+      const time = $("#reminder-time").value;
+      if (!title || !date || !time) return;
+
+      data.reminders.push({ id: makeId(), title, date, time });
+      saveData();
+      event.target.reset();
+      $("#reminder-date").value = new Date().toISOString().slice(0, 10);
+      renderReminders();
+      renderCalendar();
+
+      if ("Notification" in window && Notification.permission === "default") {
+        await Notification.requestPermission();
+      }
+    });
+
+    function renderCalendar() {
+      const year = calendarDate.getFullYear();
+      const month = calendarDate.getMonth();
+      $("#month-label").textContent = calendarDate.toLocaleDateString(undefined, {
+        month: "long", year: "numeric"
+      });
+
+      const grid = $("#calendar-grid");
+      grid.replaceChildren();
+      ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((day) => {
+        const label = document.createElement("div");
+        label.className = "weekday";
+        label.textContent = day;
+        grid.append(label);
+      });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = new Date().toISOString().slice(0, 10);
+
+      for (let i = 0; i < firstDay; i++) grid.append(document.createElement("div"));
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = year + "-" + String(month + 1).padStart(2, "0") + "-" +
+          String(day).padStart(2, "0");
+        const button = document.createElement("button");
+        button.textContent = day;
+        if (date === today) button.classList.add("today");
+        if (data.reminders.some((item) => item.date === date)) {
+          button.classList.add("has-reminder");
+          button.title = "Has a reminder";
+        }
+        button.addEventListener("click", () => {
+          $("#reminder-date").value = date;
+          showPage("reminders");
+          $("#reminder-title").focus();
+        });
+        grid.append(button);
+      }
+    }
+
+    $("#previous-month").addEventListener("click", () => {
+      calendarDate.setMonth(calendarDate.getMonth() - 1);
+      renderCalendar();
+    });
+    $("#next-month").addEventListener("click", () => {
+      calendarDate.setMonth(calendarDate.getMonth() + 1);
+      renderCalendar();
+    });
+
+    function displayTimer() {
+      const minutes = Math.floor(timerRemaining / 60);
+      const seconds = timerRemaining % 60;
+      $("#timer-display").textContent =
+        String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+    }
+
+    $("#timer-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      clearInterval(timerInterval);
+      const mins = Number($("#timer-minutes").value);
+      const secs = Number($("#timer-seconds").value);
+      timerLength = Math.max(0, mins * 60 + secs);
+      timerRemaining = timerLength;
+      $("#timer-status").textContent = "";
+      displayTimer();
+    });
+
+    $("#timer-start").addEventListener("click", () => {
+      if (timerInterval || timerRemaining <= 0) return;
+      $("#timer-status").textContent = "";
+      timerInterval = setInterval(() => {
+        timerRemaining--;
+        displayTimer();
+        if (timerRemaining <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          $("#timer-status").textContent = "Time is up!";
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Timer finished", { body: "Your timer is up." });
+          }
+        }
+      }, 1000);
+    });
+
+    $("#timer-pause").addEventListener("click", () => {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    });
+
+    $("#timer-reset").addEventListener("click", () => {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerRemaining = timerLength;
+      $("#timer-status").textContent = "";
+      displayTimer();
+    });
+
+    $("#notes-text").value = data.notes || "";
+    $("#notes-text").addEventListener("input", () => {
+      data.notes = $("#notes-text").value;
+      saveData();
+      $("#notes-status").textContent = "Saved.";
+      clearTimeout(window.notesSaveMessage);
+      window.notesSaveMessage = setTimeout(() => {
+        $("#notes-status").textContent = "";
+      }, 1200);
+    });
+
+    function bytesToBase64(bytes) {
+      return btoa(String.fromCharCode(...new Uint8Array(bytes)));
+    }
+
+    function base64ToBytes(value) {
+      return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+    }
+
+    async function deriveVaultKey(password, salt) {
+      const material = await crypto.subtle.importKey(
+        "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations: 310000, hash: "SHA-256" },
+        material,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    }
+
+    async function saveVault() {
+      const salt = base64ToBytes(localStorage.getItem(VAULT_KEY).split(".")[0]);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        vaultKey,
+        new TextEncoder().encode(JSON.stringify(vaultEntries))
+      );
+      localStorage.setItem(VAULT_KEY,
+        bytesToBase64(salt) + "." + bytesToBase64(iv) + "." + bytesToBase64(encrypted));
+    }
+
+    function renderVault() {
+      const list = $("#login-list");
+      list.replaceChildren();
+
+      if (!vaultEntries.length) {
+        list.textContent = "No logins saved yet.";
+        return;
+      }
+
+      vaultEntries.forEach((entry) => {
+        const row = document.createElement("div");
+        row.className = "item";
+        const details = document.createElement("div");
+        details.className = "item-details";
+        const site = document.createElement("strong");
+        site.textContent = entry.site;
+        const username = document.createElement("div");
+        username.className = "muted";
+        username.textContent = entry.username;
+        details.append(site, username);
+
+        const actions = document.createElement("div");
+        actions.className = "item-actions";
+
+        const copy = document.createElement("button");
+        copy.className = "secondary";
+        copy.textContent = "Copy password";
+        copy.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(entry.password);
+            $("#vault-status").textContent = "Password copied.";
+          } catch {
+            $("#vault-status").textContent = "Clipboard access failed. Use a secure browser page.";
+          }
+        });
+
+        const remove = document.createElement("button");
+        remove.className = "danger";
+        remove.textContent = "Delete";
+        remove.addEventListener("click", async () => {
+          vaultEntries = vaultEntries.filter((item) => item.id !== entry.id);
+          await saveVault();
+          renderVault();
+        });
+
+        actions.append(copy, remove);
+        row.append(details, actions);
+        list.append(row);
+      });
+    }
+
+    $("#vault-unlock-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const password = $("#master-password").value;
+      const stored = localStorage.getItem(VAULT_KEY);
+
+      try {
+        if (!crypto.subtle) throw new Error("Secure encryption is unavailable in this browser.");
+        if (!stored) {
+          if (password.length < 10) {
+            $("#vault-status").textContent = "Choose a master password with at least 10 characters.";
+            return;
+          }
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          vaultKey = await deriveVaultKey(password, salt);
+          vaultEntries = [];
+          localStorage.setItem(VAULT_KEY, bytesToBase64(salt) + "..");
+          await saveVault();
+        } else {
+          const [saltText, ivText, encryptedText] = stored.split(".");
+          vaultKey = await deriveVaultKey(password, base64ToBytes(saltText));
+          const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: base64ToBytes(ivText) },
+            vaultKey,
+            base64ToBytes(encryptedText)
+          );
+          vaultEntries = JSON.parse(new TextDecoder().decode(decrypted));
+        }
+
+        $("#master-password").value = "";
+        $("#master-password").disabled = true;
+        $("#vault-submit").hidden = true;
+        $("#vault-lock").hidden = false;
+        $("#vault-content").hidden = false;
+        $("#vault-status").textContent = "Vault unlocked.";
+        renderVault();
+      } catch (error) {
+        vaultKey = null;
+        $("#vault-status").textContent =
+          error.message.includes("Secure encryption")
+            ? error.message
+            : "Could not unlock the vault. Check your master password.";
+      }
+    });
+
+    $("#vault-lock").addEventListener("click", () => {
+      vaultKey = null;
+      vaultEntries = [];
+      $("#vault-content").hidden = true;
+      $("#vault-lock").hidden = true;
+      $("#vault-submit").hidden = false;
+      $("#master-password").disabled = false;
+      $("#vault-status").textContent = "Vault locked.";
+      $("#login-list").replaceChildren();
+    });
+
+    $("#login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      vaultEntries.push({
+        id: makeId(),
+        site: $("#login-site").value.trim(),
+        username: $("#login-username").value.trim(),
+        password: $("#login-password").value
+      });
+      await saveVault();
+      event.target.reset();
+      $("#vault-status").textContent = "Login saved.";
+      renderVault();
+    });
+
+    if (localStorage.getItem(VAULT_KEY)) {
+      $("#vault-submit").textContent = "Unlock vault";
+    }
+
+    $("#reminder-date").value = new Date().toISOString().slice(0, 10);
+    renderReminders();
+    renderCalendar();
+    displayTimer();
+  </script>
+</body>
+</html>
