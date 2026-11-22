@@ -2,146 +2,669 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>My Organizer</title>
+  <meta name="theme-color" content="#514bd8">
+  <meta name="description" content="A colorful organizer with reminders, notes, a timer, and offline mini games.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Organizer">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <style>
+    :root {
+      color-scheme: light;
+      --ink: #20233f;
+      --muted: #737895;
+      --purple: #514bd8;
+      --purple-dark: #3e39b7;
+      --line: #e8e9f4;
+      --surface: #ffffff;
+    }
+
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      color: #172033;
-      background: #f3f5f9;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background-color: #faf8ff;
+      background-image:
+        linear-gradient(#ffffff12, #ffffff12),
+        var(--wallpaper-image, radial-gradient(circle at 8% 8%, #e8e2ff, #dff9f3 55%, #fff0dc));
+      background-attachment: fixed;
+      background-position: center;
+      background-size: cover;
     }
+
     header {
-      padding: 22px;
+      padding: calc(36px + env(safe-area-inset-top)) 22px 42px;
       color: white;
-      background: #3157d5;
+      background-image:
+        linear-gradient(120deg, #454ed0d9, #7757dfbd 58%, #9b64d8b8),
+        var(--wallpaper-image, linear-gradient(120deg, #454ed0, #7757df 58%, #9b64d8));
+      background-position: center;
+      background-size: cover;
     }
-    header h1 { margin: 0 0 6px; }
-    header p { margin: 0; opacity: .9; }
+
+    .header-inner {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      width: min(1100px, 100%);
+      margin: 0 auto;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 64px;
+      height: 64px;
+      flex: 0 0 auto;
+      border: 2px solid #ffffffb8;
+      border-radius: 17px;
+      box-shadow: 0 8px 20px #28265b38;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      opacity: .8;
+    }
+
+    header h1 { margin: 0 0 7px; font-size: clamp(2rem, 5vw, 3rem); }
+    header p { margin: 0; max-width: 560px; opacity: .92; }
+
+    .header-meta {
+      display: grid;
+      gap: 8px;
+      justify-items: end;
+      color: #f0efff;
+      font-size: .9rem;
+      white-space: nowrap;
+    }
+
+    .connection-status::before {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: #87f0c2;
+      content: "";
+    }
+
+    .connection-status.offline::before { background: #ffd17d; }
+
     nav {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      padding: 12px;
-      background: white;
-      border-bottom: 1px solid #ddd;
+      gap: 5px;
+      width: min(1100px, calc(100% - 28px));
+      margin: -20px auto 0;
+      padding: 8px;
+      border: 1px solid #ffffffa8;
+      border-radius: 18px;
+      background: #ffffffed;
+      box-shadow: 0 12px 30px #33325e14;
+      backdrop-filter: blur(12px);
     }
-    button, input, textarea {
+
+    button, input, textarea, select {
       font: inherit;
     }
+
     button {
-      padding: 9px 13px;
+      min-height: 44px;
+      padding: 10px 15px;
       border: 0;
-      border-radius: 7px;
+      border-radius: 10px;
       color: white;
-      background: #3157d5;
+      background: var(--purple);
       cursor: pointer;
+      transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
     }
-    button:hover { background: #2444b2; }
-    button.secondary { color: #172033; background: #e8ebf2; }
-    button.danger { background: #b83232; }
-    nav button { color: #172033; background: #eef0f5; }
-    nav button.active { color: white; background: #3157d5; }
+
+    button:hover { background: var(--purple-dark); transform: translateY(-1px); }
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid #9fa3ff;
+      outline-offset: 2px;
+    }
+
+    button.secondary { color: var(--ink); background: #efeff8; }
+    button.secondary:hover { background: #e1e2f2; }
+    button.danger { background: #bd4756; }
+    button.danger:hover { background: #9e3442; }
+
+    nav button {
+      flex: 1 1 auto;
+      color: #555976;
+      background: transparent;
+      border-radius: 12px;
+    }
+
+    nav button:hover { color: var(--purple-dark); background: #f2f1ff; }
+    nav button.active { color: white; background: var(--purple); box-shadow: 0 4px 12px #514bd83d; }
+
     main {
-      width: min(950px, 100%);
-      margin: 22px auto;
+      width: min(1100px, 100%);
+      margin: 24px auto calc(48px + env(safe-area-inset-bottom));
       padding: 0 14px;
     }
+
     section.panel {
       display: none;
-      padding: 20px;
-      border-radius: 12px;
-      background: white;
-      box-shadow: 0 2px 10px #17203312;
+      padding: clamp(18px, 4vw, 32px);
+      border: 1px solid #ffffff;
+      border-radius: 22px;
+      background: #ffffffd9;
+      box-shadow: 0 18px 48px #34365e12;
+      backdrop-filter: blur(8px);
     }
+
     section.panel.active { display: block; }
-    h2 { margin-top: 0; }
+
+    h2 { margin: 0 0 8px; font-size: clamp(1.45rem, 3vw, 1.9rem); }
+    h3 { margin: 0 0 7px; font-size: 1.2rem; }
+
     form {
       display: flex;
       flex-wrap: wrap;
       gap: 9px;
-      margin-bottom: 18px;
+      margin: 18px 0;
     }
+
     input, textarea {
+      flex: 1 1 180px;
       min-width: 150px;
-      padding: 10px;
-      border: 1px solid #cbd1dc;
-      border-radius: 7px;
+      padding: 11px 12px;
+      border: 1px solid #dfe1ed;
+      border-radius: 10px;
+      color: var(--ink);
+      background: #fcfcff;
     }
-    textarea { width: 100%; min-height: 220px; resize: vertical; }
+
+    textarea { width: 100%; min-height: 250px; resize: vertical; line-height: 1.55; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 22px;
+    }
+
+    .install-guide {
+      margin: 16px 0 20px;
+      padding: 14px 16px;
+      border: 1px solid #dcd7ff;
+      border-radius: 14px;
+      background: linear-gradient(120deg, #f2efff, #eafaff);
+    }
+
+    .install-guide p { margin: 6px 0 0; }
+
+    nav[hidden], main[hidden], #auth-screen[hidden], #auth-ui[hidden] {
+      display: none !important;
+    }
+
+    .auth-screen {
+      width: min(520px, calc(100% - 28px));
+      margin: clamp(28px, 8vh, 80px) auto 48px;
+    }
+
+    .auth-card {
+      padding: clamp(20px, 5vw, 34px);
+      border: 1px solid #ffffff;
+      border-radius: 22px;
+      background: #fffffff0;
+      box-shadow: 0 18px 48px #34365e20;
+      backdrop-filter: blur(8px);
+    }
+
+    .auth-tabs { display: flex; gap: 8px; margin: 18px 0; }
+    .auth-tabs button { flex: 1; }
+    .auth-tabs button[aria-pressed="false"] { color: var(--ink); background: #efeff8; }
+    .auth-form label { display: grid; flex: 1 1 100%; gap: 7px; color: var(--ink); font-weight: 650; }
+    .auth-form input { width: 100%; min-width: 0; }
+    .auth-setup {
+      padding: 14px;
+      border-radius: 12px;
+      background: #fff3dc;
+      line-height: 1.55;
+    }
+
+    .auth-setup p { margin: 7px 0; }
+    .auth-setup code { overflow-wrap: anywhere; }
+    .auth-status.error { color: #a52e42; }
+
+    .stat-card {
+      display: grid;
+      gap: 5px;
+      padding: 15px 17px;
+      border: 1px solid #ecebff;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f8f7ff, #f4fbff);
+    }
+
+    .stat-card span { color: var(--muted); font-size: .85rem; }
+    .stat-card strong { overflow-wrap: anywhere; font-size: 1.05rem; }
+
     .item {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      padding: 12px 0;
-      border-top: 1px solid #e5e7ec;
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fdfdff;
     }
+
     .item-details { flex: 1; min-width: 180px; }
     .item-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-    .muted { color: #667085; font-size: .9rem; }
+
+    .muted { color: var(--muted); font-size: .92rem; line-height: 1.5; }
+
     .calendar-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      margin-bottom: 12px;
+      margin: 20px 0 14px;
     }
+
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
+      gap: 7px;
     }
+
     .calendar > div, .calendar > button {
-      min-height: 48px;
+      min-height: 54px;
       padding: 8px 4px;
       text-align: center;
     }
+
     .calendar .weekday {
       min-height: auto;
-      color: #667085;
+      color: var(--muted);
       font-size: .85rem;
       font-weight: bold;
     }
+
     .calendar > button {
-      color: #172033;
-      background: #eef0f5;
+      color: var(--ink);
+      background: #f4f4fa;
     }
-    .calendar > button.has-reminder { background: #dce5ff; }
-    .calendar > button.today { outline: 2px solid #3157d5; }
-    .status { min-height: 1.4em; color: #3157d5; }
-    @media (max-width: 550px) {
-      section.panel { padding: 15px; }
-      .calendar > div, .calendar > button { min-height: 40px; }
+
+    .calendar > button.has-reminder { color: #3f3abd; background: #e6e5ff; }
+    .calendar > button.today { outline: 2px solid var(--purple); }
+    .status { min-height: 1.4em; color: var(--purple-dark); }
+    #timer-display { margin: 18px 0; color: var(--purple); font-size: clamp(3rem, 12vw, 5rem); }
+    #timer-form { align-items: center; }
+    #timer-form input { flex: 0 1 100px; }
+
+    .alarm-settings {
+      margin-top: 28px;
+      padding: 18px;
+      border: 1px solid #f0d7ef;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #fff0f4, #f1edff);
+    }
+
+    .alarm-settings h3 { margin-bottom: 5px; }
+
+    .alarm-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      align-items: end;
+      gap: 14px;
+      margin: 16px 0 8px;
+    }
+
+    .alarm-control { display: grid; gap: 7px; }
+    .alarm-control select { width: 100%; padding: 10px 12px; border: 1px solid #dfe1ed; border-radius: 10px; background: white; }
+    .alarm-control input[type="range"] { width: 100%; min-width: 0; padding: 0; accent-color: var(--purple); }
+
+    .alarm-banner {
+      position: fixed;
+      z-index: 20;
+      right: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      left: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      width: fit-content;
+      max-width: calc(100vw - 32px);
+      margin: 0 auto;
+      padding: 12px 16px;
+      border: 2px solid #f0b543;
+      border-radius: 16px;
+      color: #45310b;
+      background: #fff8df;
+      box-shadow: 0 12px 32px #302b4d35;
+    }
+
+    .alarm-banner[hidden] { display: none; }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .game-card {
+      min-width: 0;
+      padding: 20px;
+      border: 1px solid #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 10px 24px #34365e12;
+    }
+
+    .game-memory { background: linear-gradient(145deg, #fff2fa, #f0eaff); }
+    .game-guess { background: linear-gradient(145deg, #effaff, #e5f4ff); }
+    .game-tictactoe { background: linear-gradient(145deg, #fff8e9, #ffecd2); }
+    .game-rps { background: linear-gradient(145deg, #fff0f2, #ffe2e7); }
+    .game-math { background: linear-gradient(145deg, #effff5, #ddf8e9); }
+    .game-word { background: linear-gradient(145deg, #fffde8, #fff0bf); }
+
+    .game-icon {
+      display: inline-grid;
+      width: 40px;
+      height: 40px;
+      margin-bottom: 12px;
+      place-items: center;
+      border-radius: 13px;
+      background: #ffffffb8;
+      font-size: 1.4rem;
+    }
+
+    .game-label {
+      margin-bottom: 9px;
+      color: var(--purple);
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+    }
+
+    .game-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 0 12px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .game-toolbar button { margin-left: auto; }
+
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .memory-card {
+      display: grid;
+      aspect-ratio: 1;
+      place-items: center;
+      padding: 0;
+      border: 1px solid #dedcff;
+      border-radius: 12px;
+      color: white;
+      background: linear-gradient(145deg, #635ee1, #8b70e8);
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+    }
+
+    .memory-card:hover { background: #514bd8; }
+    .memory-card.flipped, .memory-card.matched { color: var(--ink); background: white; }
+    .memory-card.matched { border-color: #9ee1c3; background: #e8fff3; }
+    .memory-card:disabled, .ttt-cell:disabled { cursor: default; opacity: 1; }
+    #guess-form { align-items: center; }
+    #guess-input { flex: 1 1 110px; max-width: 150px; }
+
+    .ttt-board {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      width: min(100%, 240px);
+      margin: 16px 0;
+    }
+
+    .ttt-cell {
+      aspect-ratio: 1;
+      padding: 0;
+      border-radius: 13px;
+      color: #8548a8;
+      background: #ffffffbf;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    .ttt-cell:hover { background: #fff; }
+    .choice-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .choice-buttons button { color: #713e58; background: #ffffffc9; }
+    .choice-buttons button:hover { background: white; }
+    .math-question { margin: 18px 0; font-size: 1.5rem; font-weight: 750; }
+    .word-scramble {
+      margin: 18px 0;
+      color: #7d5614;
+      font-size: clamp(1.5rem, 5vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: .18em;
+      overflow-wrap: anywhere;
+    }
+
+    .wallpaper-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .wallpaper-option {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 9px;
+      padding: 9px;
+      border: 2px solid transparent;
+      color: var(--ink);
+      text-align: left;
+      background: #ffffffd9;
+      box-shadow: 0 8px 18px #34365e18;
+    }
+
+    .wallpaper-option:hover { background: white; }
+    .wallpaper-option[aria-pressed="true"] {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px #514bd82b, 0 8px 18px #34365e18;
+    }
+
+    .wallpaper-option img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 7px;
+      object-fit: cover;
+    }
+
+    .wallpaper-name { font-weight: 700; }
+    .wallpaper-selected { color: var(--purple-dark); font-size: .82rem; }
+
+    .chat-log {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding: 14px;
+      border: 1px solid #e8e7f4;
+      border-radius: 16px;
+      background: #f8f7ff;
+    }
+
+    .chat-message {
+      width: fit-content;
+      max-width: min(85%, 620px);
+      padding: 11px 14px;
+      border-radius: 15px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .chat-message.assistant {
+      align-self: flex-start;
+      background: #e9e5ff;
+    }
+
+    .chat-message.user {
+      align-self: flex-end;
+      color: white;
+      background: var(--purple);
+    }
+
+    .chat-form { align-items: center; }
+    .chat-form input { flex: 1 1 220px; }
+
+    @media (max-width: 650px) {
+      .header-inner { align-items: flex-start; flex-direction: column; }
+      .header-meta { justify-items: start; }
+      nav { border-radius: 16px; }
+      nav button { flex-basis: 30%; }
+      .games-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 420px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .calendar { gap: 3px; }
+      .calendar > div, .calendar > button { min-height: 42px; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>My Organizer</h1>
-    <p>Reminders, calendar, timer, notes, and logins in one place.</p>
+    <div class="header-inner">
+      <div class="brand-lockup">
+        <img class="brand-logo" src="./icon-192.png" width="64" height="64" alt="">
+        <div>
+          <span class="eyebrow">PLAN | FOCUS | UNWIND</span>
+          <h1>My Organizer</h1>
+          <p>A calmer place for your plans, notes, focus time, and little breaks.</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span class="connection-status" id="connection-status">Checking connection...</span>
+        <span id="today-label"></span>
+        <span id="account-name" hidden></span>
+        <span id="sync-status" hidden></span>
+        <button class="secondary" id="signout-button" type="button" hidden>Sign out</button>
+      </div>
+    </div>
   </header>
 
-  <nav aria-label="App sections">
+  <section class="auth-screen" id="auth-screen">
+    <div class="auth-card">
+      <h2>Welcome to My Organizer</h2>
+      <p class="muted">Sign in or create an account to see your reminders, notes, and settings on your devices.</p>
+      <div class="auth-setup" id="supabase-setup-message" hidden>
+        <strong>One-time account setup is needed:</strong>
+        <ol>
+          <li>Create a Supabase project, enable email/password sign-in, and add this site's address to the allowed redirect URLs.</li>
+          <li>Open the Supabase SQL Editor, paste in the <a href="./supabase-setup.sql" download>database setup file</a>, and run it.</li>
+          <li>In VS Code, add your Supabase Project URL and publishable key to <code>supabase-config.js</code>.</li>
+        </ol>
+        <p>If email confirmation is on, new users must confirm their email before signing in.</p>
+        <p>Only use the publishable/anon key here. Never put a service-role or secret key in this website.</p>
+      </div>
+      <div id="auth-ui" hidden>
+        <div class="auth-tabs" role="group" aria-label="Account action">
+          <button type="button" data-auth-mode="signin" aria-pressed="true">Sign in</button>
+          <button type="button" data-auth-mode="signup" aria-pressed="false">Create account</button>
+        </div>
+        <form class="auth-form" id="signin-form">
+          <label for="signin-email">Email
+            <input id="signin-email" type="email" autocomplete="email" required>
+          </label>
+          <label for="signin-password">Password
+            <input id="signin-password" type="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit">Sign in</button>
+        </form>
+        <form class="auth-form" id="signup-form" hidden>
+          <label for="signup-username">Username
+            <input id="signup-username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" title="Use 3 to 24 letters, numbers, or underscores." autocomplete="username" required>
+          </label>
+          <label for="signup-email">Email
+            <input id="signup-email" type="email" autocomplete="email" required>
+          </label>
+          <label for="signup-password">Password
+            <input id="signup-password" type="password" minlength="8" autocomplete="new-password" required>
+          </label>
+          <button type="submit">Create account</button>
+        </form>
+      </div>
+      <p class="status auth-status" id="auth-status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <nav aria-label="App sections" hidden>
     <button class="active" data-page="reminders">Reminders</button>
     <button data-page="calendar">Calendar</button>
     <button data-page="timer">Timer</button>
     <button data-page="notes">Notes</button>
     <button data-page="vault">Password Vault</button>
+    <button data-page="games">Games</button>
+    <button data-page="backgrounds">Backgrounds</button>
+    <button data-page="assistant">AI Helper</button>
   </nav>
 
-  <main>
+  <main hidden>
     <section class="panel active" id="reminders">
       <h2>Reminders</h2>
+      <p class="muted">Keep track of what's coming up. Your organizer data syncs to your account and is cached on this device.</p>
+      <div class="install-guide">
+        <strong>Use My Organizer on your phone, tablet, or computer</strong>
+        <p class="muted">iPhone/iPad: open this secure site in Safari, tap Share, then Add to Home Screen. Android: open in Chrome and choose Install app or Add to Home screen. On a computer, use the browser's install button or bookmark the site.</p>
+        <button id="install-app" type="button" hidden>Install app</button>
+        <p class="status" id="install-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="stats-grid" aria-label="Reminder overview">
+        <div class="stat-card">
+          <span>Reminders saved</span>
+          <strong id="reminder-count">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Next up</span>
+          <strong id="next-reminder">Nothing planned</strong>
+        </div>
+      </div>
       <form id="reminder-form">
         <input id="reminder-title" placeholder="What should you remember?" required>
-        <input id="reminder-date" type="date" required>
-        <input id="reminder-time" type="time" required>
+        <input id="reminder-date" type="date" aria-label="Reminder date" required>
+        <input id="reminder-time" type="time" aria-label="Reminder time" required>
         <button type="submit">Add reminder</button>
       </form>
-      <p class="muted">Browser notifications work while this page is open. Allow notifications when your browser asks.</p>
+      <p class="muted">Reminders can alert you at their set time. Allow browser notifications below in Timer settings for alerts while this app is in another tab.</p>
+      <p class="status" id="reminder-alarm-status" role="status" aria-live="polite"></p>
       <div id="reminder-list"></div>
     </section>
 
@@ -170,18 +693,47 @@
       <button class="secondary" id="timer-pause">Pause</button>
       <button class="secondary" id="timer-reset">Reset</button>
       <p id="timer-status" class="status"></p>
+      <div class="alarm-settings">
+        <h3>Alarm sound</h3>
+        <p class="muted">Choose the ringtone and volume used for timers and reminders.</p>
+        <div class="alarm-controls">
+          <label class="alarm-control" for="alarm-tone">
+            Ringtone
+            <select id="alarm-tone">
+              <option value="chime">Chime</option>
+              <option value="bell">Bell</option>
+              <option value="digital">Digital</option>
+              <option value="gentle">Gentle</option>
+            </select>
+          </label>
+          <label class="alarm-control" for="alarm-volume">
+            Volume: <span id="alarm-volume-label">65%</span>
+            <input id="alarm-volume" type="range" min="0" max="100" step="1" value="65">
+          </label>
+          <div class="alarm-control">
+            <span>Try your sound</span>
+            <button class="secondary" id="alarm-preview" type="button">Preview ringtone</button>
+          </div>
+          <div class="alarm-control">
+            <span>Browser alerts</span>
+            <button class="secondary" id="notification-enable" type="button">Enable notifications</button>
+          </div>
+        </div>
+        <p class="status" id="alarm-settings-status" role="status" aria-live="polite"></p>
+        <p class="muted">The timer keeps accurate time when you switch tabs or minimize the app. A browser cannot run it after the app is fully closed; it will catch up and alert when you reopen it. The ringtone and volume control in-app sound; your device controls notification sounds.</p>
+      </div>
     </section>
 
     <section class="panel" id="notes">
       <h2>Notes</h2>
-      <p class="muted">Write a workout plan, shopping list, or anything else. It saves automatically in this browser.</p>
+      <p class="muted">Write a workout plan, shopping list, or anything else. Notes sync to your account and are cached on this device.</p>
       <textarea id="notes-text" placeholder="Write your notes here..."></textarea>
       <p id="notes-status" class="status"></p>
     </section>
 
     <section class="panel" id="vault">
       <h2>Password Vault</h2>
-      <p class="muted">Your vault is encrypted with your master password. Use a strong password and don't forget it.</p>
+      <p class="muted">Demo only: this encrypted vault stays on this device and does not sync. Don’t store real passwords here; use a trusted password manager for important logins.</p>
       <form id="vault-unlock-form">
         <input id="master-password" type="password" placeholder="Master password" required autocomplete="current-password">
         <button id="vault-submit" type="submit">Set up vault</button>
@@ -198,37 +750,881 @@
         <div id="login-list"></div>
       </div>
     </section>
-  </main>
 
+    <section class="panel" id="games">
+      <h2>Mini games</h2>
+      <p class="muted">Take a quick break. Games work without internet; open the app online once first so it can save an offline copy.</p>
+      <div class="games-grid">
+        <article class="game-card game-memory">
+          <span class="game-icon" aria-hidden="true">🧠</span>
+          <div class="game-label">MATCHING</div>
+          <h3>Memory Match</h3>
+          <p class="muted">Flip cards and find all eight pairs.</p>
+          <div class="game-toolbar">
+            <span>Moves: <strong id="memory-moves">0</strong></span>
+            <span>Pairs: <strong id="memory-pairs">0 / 8</strong></span>
+            <button class="secondary" id="memory-reset" type="button">Shuffle</button>
+          </div>
+          <div class="memory-grid" id="memory-grid" aria-label="Memory Match cards"></div>
+          <p class="status" id="memory-status" role="status" aria-live="polite"></p>
+        </article>
+
+        <article class="game-card game-guess">
+          <span class="game-icon" aria-hidden="true">🔢</span>
+          <div class="game-label">NUMBER GAME</div>
+          <h3>Guess the Number</h3>
+          <p class="muted">I picked a number from 1 to 100. Can you find it?</p>
+          <form id="guess-form">
+            <input id="guess-input" type="number" min="1" max="100" placeholder="1 to 100" aria-label="Your guess" required>
+            <button type="submit">Guess</button>
+          </form>
+          <p class="status" id="guess-status" role="status" aria-live="polite">Make your first guess.</p>
+          <p class="muted" id="guess-attempts">Guesses: 0</p>
+          <button class="secondary" id="guess-reset" type="button">New number</button>
+        </article>
+
+        <article class="game-card game-tictactoe">
+          <span class="game-icon" aria-hidden="true">⭕</span>
+          <div class="game-label">TWO PLAYERS</div>
+          <h3>Tic-Tac-Toe</h3>
+          <p class="muted">Take turns on the same device. Get three in a row to win.</p>
+          <div class="ttt-board" id="ttt-board" aria-label="Tic-Tac-Toe board">
+            <button class="ttt-cell" data-ttt-cell="0" type="button"></button>
+            <button class="ttt-cell" data-ttt-cell="1" type="button"></button>
+            <button class="ttt-cell" data-ttt-cell="2" type="button"></button>
+            <button class="ttt-cell" data-ttt-cell="3" type="button"></button>
+            <button class="ttt-cell" data-ttt-cell="4" type="button"></button>
+            <button class="ttt-cell" data-ttt-cell="5" type="button"></button>
+            <button class="ttt-cell" data-ttt-cell="6" type="button"></button>
+            <button class="ttt-cell" data-ttt-cell="7" type="button"></button>
+            <button class="ttt-cell" data-ttt-cell="8" type="button"></button>
+          </div>
+          <p class="status" id="ttt-status" role="status" aria-live="polite"></p>
+          <button class="secondary" id="ttt-reset" type="button">New game</button>
+        </article>
+
+        <article class="game-card game-rps">
+          <span class="game-icon" aria-hidden="true">✊</span>
+          <div class="game-label">QUICK PLAY</div>
+          <h3>Rock, Paper, Scissors</h3>
+          <p class="muted">Pick one and play against the computer.</p>
+          <div class="choice-buttons">
+            <button type="button" data-rps-choice="rock">✊ Rock</button>
+            <button type="button" data-rps-choice="paper">✋ Paper</button>
+            <button type="button" data-rps-choice="scissors">✌️ Scissors</button>
+          </div>
+          <p class="status" id="rps-status" role="status" aria-live="polite">Make your move!</p>
+          <p class="muted">You: <strong id="rps-player-score">0</strong> · Computer: <strong id="rps-computer-score">0</strong></p>
+          <button class="secondary" id="rps-reset" type="button">Reset score</button>
+        </article>
+
+        <article class="game-card game-math">
+          <span class="game-icon" aria-hidden="true">⚡</span>
+          <div class="game-label">30-SECOND CHALLENGE</div>
+          <h3>Quick Math</h3>
+          <p class="muted">Solve as many addition and subtraction questions as you can.</p>
+          <p class="math-question" id="math-question">Press Start to begin a round.</p>
+          <form id="math-form">
+            <input id="math-answer" type="number" placeholder="Your answer" aria-label="Your answer" required disabled>
+            <button type="submit" disabled>Answer</button>
+          </form>
+          <p class="muted">Score: <strong id="math-score">0</strong> · Time: <strong id="math-countdown">30</strong>s</p>
+          <p class="status" id="math-status" role="status" aria-live="polite">Ready when you are.</p>
+          <button id="math-start" type="button">Start</button>
+          <button class="secondary" id="math-reset" type="button">Reset</button>
+        </article>
+
+        <article class="game-card game-word">
+          <span class="game-icon" aria-hidden="true">🔤</span>
+          <div class="game-label">WORD PUZZLE</div>
+          <h3>Word Scramble</h3>
+          <p class="muted">Unscramble the letters to find the hidden word.</p>
+          <p class="word-scramble" id="scramble-word" aria-label="Scrambled word"></p>
+          <form id="scramble-form">
+            <input id="scramble-answer" placeholder="Type the word" aria-label="Your answer" autocomplete="off" required>
+            <button type="submit">Check</button>
+          </form>
+          <p class="status" id="scramble-status" role="status" aria-live="polite"></p>
+          <p class="muted">Solved: <strong id="scramble-score">0</strong></p>
+          <button class="secondary" id="scramble-reset" type="button">New word</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="backgrounds">
+      <h2>Choose a background</h2>
+      <p class="muted">Pick a picture for your organizer. Your choice syncs to your account and works offline.</p>
+      <div class="wallpaper-grid" id="wallpaper-grid" aria-label="Background pictures"></div>
+      <p class="status" id="wallpaper-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel" id="assistant">
+      <h2>AI Helper</h2>
+      <p class="muted">A simple offline helper for planning and using your organizer. It isn't a full AI model; your messages stay on this page and aren't sent anywhere.</p>
+      <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions">
+        <div class="chat-message assistant">Hi! Ask me for a planning idea, a focus tip, or help with the organizer.</div>
+      </div>
+      <form class="chat-form" id="chat-form">
+        <input id="chat-input" maxlength="500" placeholder="Type a message..." aria-label="Message for the helper" autocomplete="off" required>
+        <button type="submit">Send</button>
+      </form>
+      <button class="secondary" id="chat-clear" type="button">Clear chat</button>
+    </section>
+  </main>
+  <div class="alarm-banner" id="alarm-banner" role="alert" hidden>
+    <span id="alarm-banner-message"></span>
+    <button class="secondary" id="alarm-dismiss" type="button">Stop sound</button>
+  </div>
+
+  <script src="./supabase-config.js"></script>
   <script>
     const STORAGE_KEY = "myOrganizerData";
     const VAULT_KEY = "myOrganizerEncryptedVault";
+    const AUTH_STORAGE_KEY = "myOrganizerAuthSession";
+    const PENDING_SYNC_PREFIX = "myOrganizerPendingSync:";
+    const LEGACY_DATA_OWNER_KEY = "myOrganizerLegacyDataOwner";
+    const DEFAULT_WALLPAPER = "sunset";
     const $ = (selector) => document.querySelector(selector);
-
-    function loadData() {
+    const supabaseConfig = window.MY_ORGANIZER_SUPABASE || {};
+    const SUPABASE_URL = typeof supabaseConfig.projectUrl === "string"
+      ? supabaseConfig.projectUrl.replace(/\/+$/, "")
+      : "";
+    const SUPABASE_PUBLISHABLE_KEY = typeof supabaseConfig.publishableKey === "string"
+      ? supabaseConfig.publishableKey.trim()
+      : "";
+    const SUPABASE_CONFIGURED = (() => {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { reminders: [], notes: "" };
+        const url = new URL(SUPABASE_URL);
+        return (url.protocol === "https:" || url.hostname === "localhost" || url.hostname === "127.0.0.1") &&
+          SUPABASE_PUBLISHABLE_KEY.length > 0;
       } catch {
-        return { reminders: [], notes: "" };
+        return false;
+      }
+    })();
+    const wallpaperOptions = [
+      {
+        id: "sunset",
+        name: "Sunset Mountains",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#ffb26f"/><stop offset=".52" stop-color="#f178a8"/><stop offset="1" stop-color="#6258c9"/></linearGradient></defs><rect width="1200" height="800" fill="url(#sky)"/><circle cx="850" cy="330" r="115" fill="#ffe88d"/><path d="M0 650 220 390l170 190 200-285 250 330 160-210 200 245v140H0Z" fill="#5a55bd"/><path d="m0 710 260-210 185 190 210-260 245 260 155-155 145 145v120H0Z" fill="#343878"/><g fill="#fff4dd"><circle cx="130" cy="150" r="5"/><circle cx="360" cy="230" r="4"/><circle cx="1050" cy="170" r="5"/><circle cx="690" cy="115" r="4"/></g></svg>`
+      },
+      {
+        id: "ocean",
+        name: "Sunny Ocean",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#59c8ed"/><stop offset="1" stop-color="#c5f6ea"/></linearGradient><linearGradient id="sea" x2="0" y2="1"><stop stop-color="#22b6d2"/><stop offset="1" stop-color="#146ac5"/></linearGradient></defs><rect width="1200" height="800" fill="url(#sky)"/><circle cx="880" cy="245" r="95" fill="#fff3a1"/><path d="M0 420q140-35 280 0t280 0 280 0 280 0 280 0v380H0Z" fill="url(#sea)"/><path d="M0 510q100-60 200 0t200 0 200 0 200 0 200 0 200 0" fill="none" stroke="#d7fff1" stroke-width="24" opacity=".8"/><path d="M0 635q130-65 260 0t260 0 260 0 260 0 260 0v165H0Z" fill="#1255a8"/><path d="M0 690q110-38 220 0t220 0 220 0 220 0 220 0 220 0" fill="none" stroke="#76e8f0" stroke-width="18" opacity=".8"/><g fill="#fff"><circle cx="160" cy="185" r="5"/><circle cx="340" cy="270" r="4"/><circle cx="1060" cy="130" r="5"/></g></svg>`
+      },
+      {
+        id: "garden",
+        name: "Flower Garden",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#9be5ff"/><stop offset="1" stop-color="#fff3c2"/></linearGradient></defs><rect width="1200" height="800" fill="url(#sky)"/><circle cx="930" cy="205" r="76" fill="#ffe36e"/><path d="M0 510q220-120 450 0t450-5 300 20v275H0Z" fill="#8bd58b"/><path d="M0 620q220-100 430 0t420-5 350 0v185H0Z" fill="#4ab978"/><g stroke="#25834d" stroke-width="12" stroke-linecap="round"><path d="M170 690v-125M340 730V590M565 700V535M820 735V600M1030 710V550"/></g><g fill="#ff6c91"><circle cx="170" cy="545" r="24"/><circle cx="148" cy="568" r="20"/><circle cx="192" cy="568" r="20"/><circle cx="340" cy="570" r="24"/><circle cx="318" cy="593" r="20"/><circle cx="362" cy="593" r="20"/><circle cx="820" cy="580" r="24"/><circle cx="798" cy="603" r="20"/><circle cx="842" cy="603" r="20"/></g><g fill="#ffcf4c"><circle cx="170" cy="568" r="12"/><circle cx="340" cy="593" r="12"/><circle cx="820" cy="603" r="12"/><circle cx="565" cy="520" r="22"/><circle cx="1030" cy="535" r="22"/></g><g fill="#fff"><circle cx="210" cy="190" r="30"/><circle cx="245" cy="180" r="42"/><circle cx="282" cy="195" r="28"/></g></svg>`
+      },
+      {
+        id: "space",
+        name: "Colorful Space",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><defs><linearGradient id="space" x2="1" y2="1"><stop stop-color="#121445"/><stop offset=".52" stop-color="#39206d"/><stop offset="1" stop-color="#a33b88"/></linearGradient><radialGradient id="planet"><stop stop-color="#ffdc8a"/><stop offset="1" stop-color="#fa659e"/></radialGradient></defs><rect width="1200" height="800" fill="url(#space)"/><circle cx="260" cy="260" r="150" fill="#6148c8" opacity=".45"/><circle cx="890" cy="590" r="210" fill="#f35f9c" opacity=".25"/><g fill="#fff"><circle cx="110" cy="130" r="5"/><circle cx="380" cy="190" r="4"/><circle cx="600" cy="115" r="6"/><circle cx="1080" cy="220" r="4"/><circle cx="180" cy="475" r="5"/><circle cx="510" cy="390" r="4"/><circle cx="1030" cy="430" r="6"/><circle cx="680" cy="690" r="4"/></g><ellipse cx="825" cy="395" rx="190" ry="62" fill="none" stroke="#f8a5e1" stroke-width="27" transform="rotate(-18 825 395)"/><circle cx="825" cy="395" r="112" fill="url(#planet)"/><path d="M0 680q170-90 340 0t340 0 340 0 340 0v120H0Z" fill="#29245d" opacity=".75"/></svg>`
+      },
+      {
+        id: "rainbow",
+        name: "Rainbow Sky",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#a8f0ea"/><stop offset="1" stop-color="#e4dcff"/></linearGradient></defs><rect width="1200" height="800" fill="url(#sky)"/><path d="M205 680C205 105 995 105 995 680" fill="none" stroke="#ff6f91" stroke-width="58"/><path d="M265 680C265 190 935 190 935 680" fill="none" stroke="#ffb55e" stroke-width="55"/><path d="M325 680C325 275 875 275 875 680" fill="none" stroke="#ffe46f" stroke-width="52"/><path d="M383 680C383 365 817 365 817 680" fill="none" stroke="#77d99b" stroke-width="48"/><path d="M438 680C438 450 762 450 762 680" fill="none" stroke="#56a8ed" stroke-width="44"/><path d="M492 680C492 525 708 525 708 680" fill="none" stroke="#9369df" stroke-width="40"/><g fill="#fff"><circle cx="160" cy="630" r="62"/><circle cx="220" cy="610" r="82"/><circle cx="285" cy="638" r="58"/><circle cx="930" cy="635" r="65"/><circle cx="990" cy="605" r="88"/><circle cx="1060" cy="638" r="60"/></g><path d="M0 720q160-65 320 0t320 0 320 0 320 0v80H0Z" fill="#80d8b2"/></svg>`
+      },
+      {
+        id: "shapes",
+        name: "Bright Shapes",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#ffdd75"/><stop offset=".5" stop-color="#ff8daf"/><stop offset="1" stop-color="#8f78ec"/></linearGradient></defs><rect width="1200" height="800" fill="url(#bg)"/><circle cx="230" cy="210" r="155" fill="#ff5d70"/><circle cx="910" cy="185" r="205" fill="#49d6ca"/><circle cx="880" cy="620" r="250" fill="#ffd34e"/><path d="M0 520 340 285l230 275-280 240H0Z" fill="#6b55db" opacity=".92"/><path d="m430 0 285 0-330 470-190 0Z" fill="#ffca55" opacity=".9"/><path d="M590 800 920 320l280 220v260Z" fill="#ff668c" opacity=".85"/><g fill="#fff" opacity=".8"><circle cx="545" cy="150" r="25"/><circle cx="630" cy="225" r="16"/><circle cx="365" cy="645" r="22"/><circle cx="1070" cy="445" r="20"/></g></svg>`
+      }
+    ];
+
+    function formatLocalDate(date) {
+      return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") +
+        "-" + String(date.getDate()).padStart(2, "0");
+    }
+
+    function emptyOrganizerData() {
+      return { reminders: [], notes: "" };
+    }
+
+    function loadData(storageKey) {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey || STORAGE_KEY));
+        if (!stored || typeof stored !== "object" || Array.isArray(stored)) {
+          return emptyOrganizerData();
+        }
+        return {
+          ...emptyOrganizerData(),
+          ...stored,
+          reminders: Array.isArray(stored.reminders) ? stored.reminders : []
+        };
+      } catch {
+        return emptyOrganizerData();
       }
     }
 
-    let data = loadData();
+    function userDataStorageKey(userId) {
+      return STORAGE_KEY + ":" + userId;
+    }
+
+    function vaultStorageKey() {
+      return currentUser ? VAULT_KEY + ":" + currentUser.id : VAULT_KEY;
+    }
+
+    let data = emptyOrganizerData();
+    let currentUser = null;
+    let authSession = null;
+    let cloudSyncEnabled = false;
+    let cloudSaveTimeout = null;
+    let cloudSaveQueue = Promise.resolve();
     let vaultEntries = [];
     let vaultKey = null;
     let calendarDate = new Date();
-    let timerLength = 300;
-    let timerRemaining = timerLength;
+    let timerLength = Number.isInteger(data.timerLength) && data.timerLength >= 0
+      ? data.timerLength
+      : 300;
+    let timerRemaining = Number.isInteger(data.timerRemaining) && data.timerRemaining >= 0
+      ? data.timerRemaining
+      : timerLength;
+    let timerEndAt = Number.isFinite(data.timerEndAt) ? data.timerEndAt : null;
     let timerInterval = null;
+    let alarmAudioContext = null;
+    let alarmInterval = null;
+    let alarmStopTimeout = null;
+    const memorySymbols = ["🍋", "🐳", "🌈", "🚀", "🌻", "🎸", "🍕", "🐙"];
+    let memoryDeck = [];
+    let memoryOpen = [];
+    let memoryMatched = new Set();
+    let memoryMoves = 0;
+    let memoryLocked = false;
+    let memoryTimeout = null;
+    let targetNumber = 0;
+    let guessCount = 0;
+    let numberSolved = false;
+    let tttCells = Array(9).fill("");
+    let tttTurn = "X";
+    let tttFinished = false;
+    let rpsPlayerScore = 0;
+    let rpsComputerScore = 0;
+    let mathInterval = null;
+    let mathRemaining = 30;
+    let mathScore = 0;
+    let mathAnswer = 0;
+    let mathRunning = false;
+    const scrambleWords = ["planet", "garden", "rocket", "puzzle", "rainbow", "sunshine", "library", "dolphin"];
+    let currentScrambleWord = "";
+    let scrambleScore = 0;
+    let scrambleSolved = false;
+    let offlineCopyReady = false;
+    let deferredInstallPrompt = null;
 
     function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const storageKey = currentUser ? userDataStorageKey(currentUser.id) : STORAGE_KEY;
+      localStorage.setItem(storageKey, JSON.stringify(data));
+      if (currentUser && cloudSyncEnabled) {
+        scheduleCloudSave();
+      } else if (currentUser) {
+        localStorage.setItem(PENDING_SYNC_PREFIX + currentUser.id, "true");
+      }
     }
+
+    function setAuthStatus(message, isError) {
+      const status = $("#auth-status");
+      status.textContent = message;
+      status.classList.toggle("error", Boolean(isError));
+    }
+
+    function setAuthMode(mode) {
+      const isSignUp = mode === "signup";
+      $("#signin-form").hidden = isSignUp;
+      $("#signup-form").hidden = !isSignUp;
+      document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.authMode === mode));
+      });
+      setAuthStatus("", false);
+    }
+
+    document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+      button.addEventListener("click", () => setAuthMode(button.dataset.authMode));
+    });
+
+    async function requestSupabase(path, options) {
+      if (!SUPABASE_CONFIGURED) {
+        throw new Error("Account sign-in is not configured yet.");
+      }
+      const requestOptions = options || {};
+      const headers = {
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": "application/json"
+      };
+      if (requestOptions.accessToken) {
+        headers.Authorization = "Bearer " + requestOptions.accessToken;
+      }
+      if (requestOptions.prefer) headers.Prefer = requestOptions.prefer;
+
+      let response;
+      try {
+        response = await fetch(SUPABASE_URL + path, {
+          method: requestOptions.method || "GET",
+          headers,
+          body: requestOptions.body === undefined
+            ? undefined
+            : JSON.stringify(requestOptions.body)
+        });
+      } catch {
+        throw new Error("Could not reach the account service. Check the internet and project URL.");
+      }
+
+      const responseText = await response.text();
+      let result = null;
+      if (responseText) {
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          if (response.ok) throw new Error("The account service returned an unreadable response.");
+        }
+      }
+      if (!response.ok) {
+        const message = result &&
+          (result.msg || result.message || result.error_description || result.error);
+        throw new Error(typeof message === "string"
+          ? message
+          : "Account request failed (" + response.status + ").");
+      }
+      return result;
+    }
+
+    function storeAuthSession(value, fallbackUser) {
+      const result = value && value.session ? value.session : value;
+      const user = result && result.user
+        ? result.user
+        : fallbackUser || (authSession && authSession.user);
+      if (!result || !result.access_token || !result.refresh_token || !user) return null;
+
+      const expiresIn = Number(result.expires_in) || 3600;
+      const expiresAt = Number.isFinite(Number(result.expires_at))
+        ? Number(result.expires_at)
+        : Math.floor(Date.now() / 1000) + expiresIn;
+      authSession = {
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+        expires_at: expiresAt,
+        user
+      };
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authSession));
+      return authSession;
+    }
+
+    async function validAuthSession() {
+      if (!authSession || !authSession.refresh_token) {
+        throw new Error("Please sign in again.");
+      }
+      if (authSession.expires_at > Math.floor(Date.now() / 1000) + 60) return authSession;
+      const refreshed = await requestSupabase(
+        "/auth/v1/token?grant_type=refresh_token",
+        { method: "POST", body: { refresh_token: authSession.refresh_token } }
+      );
+      const session = storeAuthSession(refreshed, authSession.user);
+      if (!session) throw new Error("Your session expired. Please sign in again.");
+      return session;
+    }
+
+    function normalizeOrganizerData(value) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return emptyOrganizerData();
+      }
+      return {
+        ...emptyOrganizerData(),
+        ...value,
+        reminders: Array.isArray(value.reminders) ? value.reminders : [],
+        notes: typeof value.notes === "string" ? value.notes : ""
+      };
+    }
+
+    function hasOrganizerContent(value) {
+      return value.reminders.length > 0 ||
+        Boolean(typeof value.notes === "string" && value.notes.trim()) ||
+        Boolean(value.wallpaper) ||
+        Number.isInteger(value.timerLength) ||
+        Boolean(value.alarmTone) ||
+        Number.isInteger(value.alarmVolume);
+    }
+
+    async function loadCloudRecord(userId, accessToken) {
+      const rows = await requestSupabase(
+        "/rest/v1/organizer_data?select=data&user_id=eq." + encodeURIComponent(userId),
+        { method: "GET", accessToken }
+      );
+      if (!Array.isArray(rows)) throw new Error("The organizer data table returned an unexpected response.");
+      return rows.length ? rows[0] : null;
+    }
+
+    async function writeCloudRecord(userId, snapshot) {
+      const session = await validAuthSession();
+      await requestSupabase("/rest/v1/organizer_data?on_conflict=user_id", {
+        method: "POST",
+        accessToken: session.access_token,
+        prefer: "resolution=merge-duplicates,return=minimal",
+        body: {
+          user_id: userId,
+          data: snapshot,
+          updated_at: new Date().toISOString()
+        }
+      });
+    }
+
+    function queueCloudSave(userId, snapshot) {
+      cloudSaveQueue = cloudSaveQueue.then(async () => {
+        if (!currentUser || currentUser.id !== userId || !cloudSyncEnabled) return;
+        try {
+          await writeCloudRecord(userId, snapshot);
+          localStorage.removeItem(PENDING_SYNC_PREFIX + userId);
+          if (currentUser && currentUser.id === userId) $("#sync-status").textContent = "Synced";
+        } catch (error) {
+          console.error("Organizer data could not sync.", error);
+          if (currentUser && currentUser.id === userId) {
+            $("#sync-status").textContent =
+              "Sync failed; changes are saved on this device.";
+          }
+        }
+      });
+      return cloudSaveQueue;
+    }
+
+    function scheduleCloudSave() {
+      if (!currentUser || !cloudSyncEnabled) return;
+      const userId = currentUser.id;
+      const snapshot = JSON.parse(JSON.stringify(data));
+      localStorage.setItem(PENDING_SYNC_PREFIX + userId, "true");
+      $("#sync-status").textContent = "Saving...";
+      clearTimeout(cloudSaveTimeout);
+      cloudSaveTimeout = window.setTimeout(() => {
+        cloudSaveTimeout = null;
+        queueCloudSave(userId, snapshot);
+      }, 700);
+    }
+
+    async function flushCloudSave() {
+      if (!currentUser) return;
+      if (cloudSaveTimeout) {
+        clearTimeout(cloudSaveTimeout);
+        cloudSaveTimeout = null;
+        await queueCloudSave(currentUser.id, JSON.parse(JSON.stringify(data)));
+      }
+      await cloudSaveQueue;
+    }
+
+    function renderUserData() {
+      timerLength = Number.isInteger(data.timerLength) && data.timerLength >= 0
+        ? data.timerLength
+        : 300;
+      timerRemaining = Number.isInteger(data.timerRemaining) && data.timerRemaining >= 0
+        ? data.timerRemaining
+        : timerLength;
+      timerEndAt = Number.isFinite(data.timerEndAt) ? data.timerEndAt : null;
+      $("#notes-text").value = data.notes || "";
+      initializeAlarmSettings();
+      initializeReminderAlarms();
+      renderReminders();
+      renderCalendar();
+      restoreTimer();
+      $("#vault-submit").textContent = localStorage.getItem(vaultStorageKey())
+        ? "Unlock vault"
+        : "Set up vault";
+      renderWallpapers();
+      checkDueReminders();
+    }
+
+    function showAuthenticatedApp(user, syncMessage) {
+      currentUser = user;
+      const userMetadata = user.user_metadata || {};
+      $("#account-name").textContent =
+        userMetadata.username || user.email || "Signed in";
+      $("#account-name").hidden = false;
+      $("#sync-status").textContent = syncMessage || "Synced";
+      $("#sync-status").hidden = false;
+      $("#signout-button").hidden = false;
+      $("#signout-button").disabled = false;
+      $("#auth-screen").hidden = true;
+      document.querySelector("nav").hidden = false;
+      document.querySelector("main").hidden = false;
+    }
+
+    async function enterAuthenticatedApp(user, session) {
+      if (!user || !user.id) throw new Error("The account service returned no user profile.");
+      authSession = session;
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authSession));
+      currentUser = user;
+      cloudSyncEnabled = false;
+
+      const userId = user.id;
+      const userStorageKey = userDataStorageKey(userId);
+      const pendingSync = localStorage.getItem(PENDING_SYNC_PREFIX + userId) === "true";
+      const cachedData = normalizeOrganizerData(loadData(userStorageKey));
+      const record = await loadCloudRecord(userId, session.access_token);
+
+      if (record && !pendingSync) {
+        data = normalizeOrganizerData(record.data);
+      } else if (record && pendingSync) {
+        data = cachedData;
+        await writeCloudRecord(userId, data);
+        localStorage.removeItem(PENDING_SYNC_PREFIX + userId);
+      } else if (hasOrganizerContent(cachedData)) {
+        data = cachedData;
+        await writeCloudRecord(userId, data);
+      } else {
+        const legacyData = normalizeOrganizerData(loadData(STORAGE_KEY));
+        const legacyOwner = localStorage.getItem(LEGACY_DATA_OWNER_KEY);
+        if (hasOrganizerContent(legacyData) && (!legacyOwner || legacyOwner === userId)) {
+          const importLegacy = window.confirm(
+            "This browser has existing organizer data. Import it into this account?"
+          );
+          data = importLegacy ? legacyData : emptyOrganizerData();
+          localStorage.setItem(LEGACY_DATA_OWNER_KEY, userId);
+        } else {
+          data = emptyOrganizerData();
+        }
+        await writeCloudRecord(userId, data);
+      }
+
+      data = normalizeOrganizerData(data);
+      localStorage.setItem(userStorageKey, JSON.stringify(data));
+      cloudSyncEnabled = true;
+      localStorage.removeItem(PENDING_SYNC_PREFIX + userId);
+      showAuthenticatedApp(user, "Synced");
+      renderUserData();
+      setAuthStatus("", false);
+    }
+
+    function showAuthScreen() {
+      currentUser = null;
+      cloudSyncEnabled = false;
+      $("#auth-screen").hidden = false;
+      document.querySelector("nav").hidden = true;
+      document.querySelector("main").hidden = true;
+      $("#account-name").hidden = true;
+      $("#sync-status").hidden = true;
+      $("#signout-button").hidden = true;
+    }
+
+    async function handleSignIn(event) {
+      event.preventDefault();
+      const email = $("#signin-email").value.trim();
+      const password = $("#signin-password").value;
+      const button = $("#signin-form button[type='submit']");
+      button.disabled = true;
+      setAuthStatus("Signing in...", false);
+      try {
+        const result = await requestSupabase("/auth/v1/token?grant_type=password", {
+          method: "POST",
+          body: { email, password }
+        });
+        const session = storeAuthSession(result);
+        if (!session) throw new Error("Sign-in did not return a valid session.");
+        const user = await requestSupabase("/auth/v1/user", {
+          method: "GET",
+          accessToken: session.access_token
+        });
+        await enterAuthenticatedApp(user, session);
+        $("#signin-password").value = "";
+      } catch (error) {
+        console.error("Sign-in failed.", error);
+        authSession = null;
+        currentUser = null;
+        cloudSyncEnabled = false;
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        setAuthStatus(error.message, true);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function handleSignUp(event) {
+      event.preventDefault();
+      const username = $("#signup-username").value.trim();
+      const email = $("#signup-email").value.trim();
+      const password = $("#signup-password").value;
+      const button = $("#signup-form button[type='submit']");
+      button.disabled = true;
+      setAuthStatus("Creating your account...", false);
+      try {
+        const redirectTo = encodeURIComponent(window.location.href);
+        const result = await requestSupabase("/auth/v1/signup?redirect_to=" + redirectTo, {
+          method: "POST",
+          body: { email, password, data: { username } }
+        });
+        const returnedSession = result && (result.session || result.access_token && result);
+        if (!returnedSession) {
+          setAuthMode("signin");
+          $("#signin-email").value = email;
+          setAuthStatus("Account created. Check your email if confirmation is enabled, then sign in.", false);
+          return;
+        }
+        const session = storeAuthSession(returnedSession, result.user);
+        if (!session) throw new Error("Account created, but no sign-in session was returned. Check your email, then sign in.");
+        const user = await requestSupabase("/auth/v1/user", {
+          method: "GET",
+          accessToken: session.access_token
+        });
+        await enterAuthenticatedApp(user, session);
+        $("#signup-password").value = "";
+      } catch (error) {
+        console.error("Account creation failed.", error);
+        authSession = null;
+        currentUser = null;
+        cloudSyncEnabled = false;
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        setAuthStatus(error.message, true);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    $("#signin-form").addEventListener("submit", handleSignIn);
+    $("#signup-form").addEventListener("submit", handleSignUp);
+
+    async function restoreAuthentication() {
+      $("#auth-ui").hidden = !SUPABASE_CONFIGURED;
+      $("#supabase-setup-message").hidden = SUPABASE_CONFIGURED;
+      if (!SUPABASE_CONFIGURED) {
+        setAuthStatus("", false);
+        return;
+      }
+      setAuthMode("signin");
+
+      let savedSession;
+      try {
+        savedSession = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY));
+      } catch {
+        savedSession = null;
+      }
+      if (!savedSession || !savedSession.user || !savedSession.refresh_token) return;
+
+      authSession = savedSession;
+      try {
+        const session = await validAuthSession();
+        const user = await requestSupabase("/auth/v1/user", {
+          method: "GET",
+          accessToken: session.access_token
+        });
+        await enterAuthenticatedApp(user, session);
+      } catch (error) {
+        if (!navigator.onLine && savedSession.user.id) {
+          authSession = savedSession;
+          currentUser = savedSession.user;
+          data = normalizeOrganizerData(loadData(userDataStorageKey(currentUser.id)));
+          cloudSyncEnabled = false;
+          showAuthenticatedApp(currentUser, "Offline; changes stay on this device until sync.");
+          renderUserData();
+        } else {
+          console.error("Saved sign-in could not be restored.", error);
+          currentUser = null;
+          cloudSyncEnabled = false;
+          setAuthStatus("Could not verify your saved sign-in. Please sign in when you're online.", true);
+        }
+      }
+    }
+
+    async function synchronizeCurrentUser() {
+      if (!currentUser) return;
+      const userId = currentUser.id;
+      try {
+        const session = await validAuthSession();
+        const user = await requestSupabase("/auth/v1/user", {
+          method: "GET",
+          accessToken: session.access_token
+        });
+        if (user.id !== userId) throw new Error("The signed-in account changed. Please sign in again.");
+        authSession = session;
+        if (localStorage.getItem(PENDING_SYNC_PREFIX + userId) === "true") {
+          await writeCloudRecord(userId, data);
+          localStorage.removeItem(PENDING_SYNC_PREFIX + userId);
+        } else {
+          const record = await loadCloudRecord(userId, session.access_token);
+          if (record) {
+            data = normalizeOrganizerData(record.data);
+            localStorage.setItem(userDataStorageKey(userId), JSON.stringify(data));
+            renderUserData();
+          } else {
+            await writeCloudRecord(userId, data);
+          }
+        }
+        cloudSyncEnabled = true;
+        $("#sync-status").textContent = "Synced";
+      } catch (error) {
+        console.error("Organizer data could not reconnect.", error);
+        $("#sync-status").textContent = "Still offline; changes are saved on this device.";
+      }
+    }
+
+    async function handleSignOut() {
+      $("#signout-button").disabled = true;
+      await flushCloudSave();
+      const session = authSession;
+      const signOutUserId = currentUser && currentUser.id;
+      cloudSyncEnabled = false;
+      currentUser = null;
+      authSession = null;
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      let signOutWarning = "";
+      if (session && session.access_token) {
+        try {
+          await requestSupabase("/auth/v1/logout", {
+            method: "POST",
+            accessToken: session.access_token
+          });
+        } catch (error) {
+          console.error("The server could not revoke this sign-in session.", error);
+          signOutWarning = " Signed out here, but the server could not revoke the session.";
+        }
+      }
+      if (signOutUserId && cloudSaveTimeout) {
+        clearTimeout(cloudSaveTimeout);
+        cloudSaveTimeout = null;
+      }
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerEndAt = null;
+      stopAlarmSound();
+      vaultKey = null;
+      vaultEntries = [];
+      data = emptyOrganizerData();
+      $("#notes-text").value = "";
+      $("#login-list").replaceChildren();
+      showAuthScreen();
+      setAuthMode("signin");
+      setAuthStatus("You are signed out." + signOutWarning, Boolean(signOutWarning));
+    }
+
+    $("#signout-button").addEventListener("click", handleSignOut);
+
+    window.addEventListener("online", () => {
+      if (currentUser && !cloudSyncEnabled) synchronizeCurrentUser();
+      else if (currentUser) scheduleCloudSave();
+    });
+
+    window.addEventListener("pagehide", () => {
+      if (currentUser && cloudSaveTimeout) {
+        clearTimeout(cloudSaveTimeout);
+        cloudSaveTimeout = null;
+        queueCloudSave(currentUser.id, JSON.parse(JSON.stringify(data)));
+      }
+    });
 
     function makeId() {
       return (crypto.randomUUID && crypto.randomUUID()) ||
         Date.now().toString(36) + Math.random().toString(36).slice(2);
     }
+
+    function wallpaperImageUrl(svg) {
+      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    }
+
+    function applyWallpaper(id) {
+      const wallpaper = wallpaperOptions.find((option) => option.id === id) || wallpaperOptions[0];
+      document.body.style.setProperty("--wallpaper-image",
+        "url(\"" + wallpaperImageUrl(wallpaper.svg) + "\")");
+      document.querySelectorAll(".wallpaper-option").forEach((button) => {
+        const selected = button.dataset.wallpaper === wallpaper.id;
+        button.setAttribute("aria-pressed", String(selected));
+        button.querySelector(".wallpaper-selected").textContent =
+          selected ? "Selected background" : "Choose background";
+      });
+    }
+
+    function selectWallpaper(id) {
+      const wallpaper = wallpaperOptions.find((option) => option.id === id);
+      if (!wallpaper) return;
+      data.wallpaper = wallpaper.id;
+      saveData();
+      applyWallpaper(wallpaper.id);
+      $("#wallpaper-status").textContent = wallpaper.name + " selected.";
+    }
+
+    function renderWallpapers() {
+      const grid = $("#wallpaper-grid");
+      wallpaperOptions.forEach((wallpaper) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "wallpaper-option";
+        button.dataset.wallpaper = wallpaper.id;
+        button.setAttribute("aria-pressed", "false");
+
+        const preview = document.createElement("img");
+        preview.src = wallpaperImageUrl(wallpaper.svg);
+        preview.alt = "";
+
+        const name = document.createElement("span");
+        name.className = "wallpaper-name";
+        name.textContent = wallpaper.name;
+
+        const selected = document.createElement("span");
+        selected.className = "wallpaper-selected";
+        selected.textContent = "Choose background";
+
+        button.append(preview, name, selected);
+        button.addEventListener("click", () => selectWallpaper(wallpaper.id));
+        grid.append(button);
+      });
+
+      const savedId = wallpaperOptions.some((option) => option.id === data.wallpaper)
+        ? data.wallpaper
+        : DEFAULT_WALLPAPER;
+      applyWallpaper(savedId);
+    }
+
+    function getAssistantReply(message) {
+      const text = message.toLowerCase();
+      if (/\b(hi|hello|hey)\b/.test(text)) {
+        return "Hi! What would you like help planning today?";
+      }
+      if (/\b(reminder|alarm|timer)\b/.test(text)) {
+        return "Use Reminders for something tied to a date and time, or Timer for a countdown. You can choose an alarm sound and volume in the Timer section.";
+      }
+      if (/\b(plan|planning|schedule|organize|organise|today)\b/.test(text)) {
+        return "Try picking three things: one must-do, one quick task, and one nice thing for yourself. Add time-specific items as reminders.";
+      }
+      if (/\b(focus|study|work|procrastinat)\b/.test(text)) {
+        return "Choose one small task, set the focus timer for 15 minutes, and put away anything distracting until it rings.";
+      }
+      if (/\b(note|notes|list|shopping)\b/.test(text)) {
+        return "The Notes section saves automatically and syncs across your signed-in devices. It works well for checklists, ideas, and quick plans.";
+      }
+      if (/\b(game|games|play|bored)\b/.test(text)) {
+        return "Open Games for Memory Match, Guess the Number, Tic-Tac-Toe, Rock-Paper-Scissors, Quick Math, and Word Scramble.";
+      }
+      if (/\b(background|picture|color|colour|wallpaper)\b/.test(text)) {
+        return "Open Backgrounds to choose from six pictures: sunset, ocean, flower garden, space, rainbow, and bright shapes.";
+      }
+      if (/\b(joke|laugh)\b/.test(text)) {
+        return "Why did the calendar feel popular? It had so many dates!";
+      }
+      if (/\b(thanks|thank you)\b/.test(text)) {
+        return "You're welcome! Let me know if you want help making a small plan.";
+      }
+      return "I'm a simple offline helper, so I may not know that one. Try asking about planning, focus, reminders, notes, games, or backgrounds.";
+    }
+
+    function addChatMessage(message, sender) {
+      const bubble = document.createElement("div");
+      bubble.className = "chat-message " + sender;
+      bubble.textContent = message;
+      $("#chat-log").append(bubble);
+      $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
+    }
+
+    function resetChat() {
+      $("#chat-log").replaceChildren();
+      addChatMessage("Hi! Ask me for a planning idea, a focus tip, or help with the organizer.", "assistant");
+    }
+
+    $("#chat-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = $("#chat-input");
+      const message = input.value.trim();
+      if (!message) return;
+      addChatMessage(message, "user");
+      addChatMessage(getAssistantReply(message), "assistant");
+      input.value = "";
+      input.focus();
+    });
+    $("#chat-clear").addEventListener("click", resetChat);
 
     function showPage(page) {
       document.querySelectorAll("section.panel").forEach((section) => {
@@ -244,6 +1640,38 @@
       button.addEventListener("click", () => showPage(button.dataset.page));
     });
 
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      $("#install-app").hidden = false;
+    });
+
+    $("#install-app").addEventListener("click", async () => {
+      if (!deferredInstallPrompt) return;
+      const installPrompt = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      $("#install-app").disabled = true;
+      try {
+        await installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
+        $("#install-status").textContent = choice.outcome === "accepted"
+          ? "My Organizer was added to your device."
+          : "You can install it later from your browser menu.";
+      } catch (error) {
+        console.error("The app install prompt could not be opened.", error);
+        $("#install-status").textContent = "Use your browser menu to install this app.";
+      } finally {
+        $("#install-app").hidden = true;
+        $("#install-app").disabled = false;
+      }
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      $("#install-app").hidden = true;
+      $("#install-status").textContent = "My Organizer is installed on this device.";
+    });
+
     function renderReminders() {
       const list = $("#reminder-list");
       list.replaceChildren();
@@ -251,6 +1679,13 @@
       const reminders = [...data.reminders].sort((a, b) =>
         (a.date + a.time).localeCompare(b.date + b.time)
       );
+      const upcoming = reminders.filter((reminder) =>
+        new Date(reminder.date + "T" + reminder.time) >= new Date()
+      );
+      $("#reminder-count").textContent = String(reminders.length);
+      $("#next-reminder").textContent = upcoming.length
+        ? upcoming[0].title + " | " + upcoming[0].date + " at " + upcoming[0].time
+        : "Nothing planned";
 
       if (!reminders.length) {
         list.textContent = "No reminders yet.";
@@ -267,7 +1702,8 @@
         title.textContent = reminder.title;
         const when = document.createElement("div");
         when.className = "muted";
-        when.textContent = reminder.date + " at " + reminder.time;
+        when.textContent = reminder.date + " at " + reminder.time +
+          (reminder.alarmEnabled === false ? "" : " · alarm enabled");
         details.append(title, when);
 
         const remove = document.createElement("button");
@@ -285,6 +1721,19 @@
       });
     }
 
+    function initializeReminderAlarms() {
+      let changed = false;
+      data.reminders.forEach((reminder) => {
+        if (typeof reminder.alarmEnabled === "undefined") {
+          const dueAt = new Date(reminder.date + "T" + reminder.time).getTime();
+          reminder.alarmEnabled = Number.isFinite(dueAt) && dueAt > Date.now();
+          if (!reminder.alarmEnabled) reminder.notified = true;
+          changed = true;
+        }
+      });
+      if (changed) saveData();
+    }
+
     $("#reminder-form").addEventListener("submit", async (event) => {
       event.preventDefault();
       const title = $("#reminder-title").value.trim();
@@ -292,16 +1741,23 @@
       const time = $("#reminder-time").value;
       if (!title || !date || !time) return;
 
-      data.reminders.push({ id: makeId(), title, date, time });
+      data.reminders.push({ id: makeId(), title, date, time, alarmEnabled: true, notified: false });
       saveData();
       event.target.reset();
-      $("#reminder-date").value = new Date().toISOString().slice(0, 10);
+      $("#reminder-date").value = formatLocalDate(new Date());
       renderReminders();
       renderCalendar();
-
-      if ("Notification" in window && Notification.permission === "default") {
-        await Notification.requestPermission();
-      }
+      const notificationRequest = requestNotificationPermission();
+      const audioRequest = prepareAlarmAudio();
+      const [notificationsEnabled, audioEnabled] =
+        await Promise.all([notificationRequest, audioRequest]);
+      const alarmHelp = [];
+      if (!notificationsEnabled) alarmHelp.push("enable browser notifications in Timer settings");
+      if (!audioEnabled) alarmHelp.push("preview the sound in Timer settings");
+      $("#reminder-alarm-status").textContent = alarmHelp.length
+        ? "Reminder saved; " + alarmHelp.join(" and ") + "."
+        : "Reminder saved with a browser alert and ringtone.";
+      checkDueReminders();
     });
 
     function renderCalendar() {
@@ -322,7 +1778,7 @@
 
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const today = new Date().toISOString().slice(0, 10);
+      const today = formatLocalDate(new Date());
 
       for (let i = 0; i < firstDay; i++) grid.append(document.createElement("div"));
 
@@ -354,6 +1810,164 @@
       renderCalendar();
     });
 
+    const ringtonePatterns = {
+      chime: [
+        { frequency: 659, offset: 0, duration: .24, type: "sine" },
+        { frequency: 784, offset: .25, duration: .24, type: "sine" },
+        { frequency: 1047, offset: .5, duration: .42, type: "sine" }
+      ],
+      bell: [
+        { frequency: 880, offset: 0, duration: .42, type: "triangle" },
+        { frequency: 660, offset: .46, duration: .48, type: "triangle" }
+      ],
+      digital: [
+        { frequency: 880, offset: 0, duration: .16, type: "square" },
+        { frequency: 660, offset: .2, duration: .16, type: "square" },
+        { frequency: 880, offset: .4, duration: .16, type: "square" },
+        { frequency: 660, offset: .6, duration: .22, type: "square" }
+      ],
+      gentle: [
+        { frequency: 523, offset: 0, duration: .36, type: "sine" },
+        { frequency: 659, offset: .38, duration: .5, type: "sine" }
+      ]
+    };
+
+    async function prepareAlarmAudio() {
+      const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextConstructor) return false;
+      try {
+        if (!alarmAudioContext) alarmAudioContext = new AudioContextConstructor();
+        if (alarmAudioContext.state === "suspended") await alarmAudioContext.resume();
+        return alarmAudioContext.state === "running";
+      } catch (error) {
+        console.error("Alarm audio could not be started.", error);
+        return false;
+      }
+    }
+
+    function playRingtone() {
+      if (!alarmAudioContext || alarmAudioContext.state !== "running") return false;
+      const volume = Number($("#alarm-volume").value) / 100;
+      if (volume === 0) return false;
+      const pattern = ringtonePatterns[$("#alarm-tone").value] || ringtonePatterns.chime;
+      const start = alarmAudioContext.currentTime;
+
+      pattern.forEach((note) => {
+        const oscillator = alarmAudioContext.createOscillator();
+        const gain = alarmAudioContext.createGain();
+        const noteStart = start + note.offset;
+        oscillator.type = note.type;
+        oscillator.frequency.setValueAtTime(note.frequency, noteStart);
+        gain.gain.setValueAtTime(.0001, noteStart);
+        gain.gain.linearRampToValueAtTime(volume * .6, noteStart + .02);
+        gain.gain.exponentialRampToValueAtTime(.0001, noteStart + note.duration);
+        oscillator.connect(gain);
+        gain.connect(alarmAudioContext.destination);
+        oscillator.start(noteStart);
+        oscillator.stop(noteStart + note.duration + .02);
+      });
+      return true;
+    }
+
+    function stopAlarmSound() {
+      clearInterval(alarmInterval);
+      clearTimeout(alarmStopTimeout);
+      alarmInterval = null;
+      alarmStopTimeout = null;
+      $("#alarm-banner").hidden = true;
+    }
+
+    function startAlarmSound(message) {
+      stopAlarmSound();
+      $("#alarm-banner-message").textContent = message;
+      $("#alarm-banner").hidden = false;
+      if (playRingtone()) {
+        alarmInterval = window.setInterval(playRingtone, 1800);
+        alarmStopTimeout = window.setTimeout(stopAlarmSound, 30000);
+      }
+    }
+
+    async function requestNotificationPermission() {
+      if (!("Notification" in window)) return false;
+      if (Notification.permission === "granted") return true;
+      if (Notification.permission !== "default") return false;
+      try {
+        return await Notification.requestPermission() === "granted";
+      } catch (error) {
+        console.error("Notification permission could not be requested.", error);
+        return false;
+      }
+    }
+
+    async function showBrowserNotification(title, body) {
+      if (!("Notification" in window) || Notification.permission !== "granted") return false;
+      try {
+        const options = {
+          body,
+          icon: "./icon.svg",
+          tag: "my-organizer-alarm-" + Date.now(),
+          renotify: true
+        };
+        if ("serviceWorker" in navigator && location.protocol === "https:") {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.showNotification(title, options);
+        } else {
+          const notification = new Notification(title, options);
+          notification.onclick = () => window.focus();
+        }
+        return true;
+      } catch (error) {
+        console.error("The alarm notification could not be displayed.", error);
+        return false;
+      }
+    }
+
+    function initializeAlarmSettings() {
+      const tone = Object.prototype.hasOwnProperty.call(ringtonePatterns, data.alarmTone)
+        ? data.alarmTone
+        : "chime";
+      const volume = Number.isInteger(data.alarmVolume) && data.alarmVolume >= 0 && data.alarmVolume <= 100
+        ? data.alarmVolume
+        : 65;
+      $("#alarm-tone").value = tone;
+      $("#alarm-volume").value = String(volume);
+      $("#alarm-volume-label").textContent = volume + "%";
+    }
+
+    function saveAlarmSettings() {
+      data.alarmTone = $("#alarm-tone").value;
+      data.alarmVolume = Number($("#alarm-volume").value);
+      saveData();
+      $("#alarm-settings-status").textContent = "Alarm sound settings saved.";
+    }
+
+    $("#alarm-tone").addEventListener("change", saveAlarmSettings);
+    $("#alarm-volume").addEventListener("input", () => {
+      $("#alarm-volume-label").textContent = $("#alarm-volume").value + "%";
+    });
+    $("#alarm-volume").addEventListener("change", saveAlarmSettings);
+    $("#alarm-preview").addEventListener("click", async () => {
+      if (!await prepareAlarmAudio()) {
+        $("#alarm-settings-status").textContent = "This browser could not start alarm audio.";
+        return;
+      }
+      if (!playRingtone()) {
+        $("#alarm-settings-status").textContent = "Volume is muted. Raise it to hear the preview.";
+        return;
+      }
+      $("#alarm-settings-status").textContent = "Playing " +
+        $("#alarm-tone").selectedOptions[0].textContent + " at " +
+        $("#alarm-volume").value + "% volume.";
+    });
+
+    $("#notification-enable").addEventListener("click", async () => {
+      const enabled = await requestNotificationPermission();
+      $("#alarm-settings-status").textContent = enabled
+        ? "Browser notifications are enabled."
+        : "Notifications are unavailable or blocked. Check this site's browser permissions.";
+    });
+    $("#alarm-dismiss").addEventListener("click", stopAlarmSound);
+
     function displayTimer() {
       const minutes = Math.floor(timerRemaining / 60);
       const seconds = timerRemaining % 60;
@@ -361,46 +1975,158 @@
         String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
     }
 
+    function finishTimer(endAt) {
+      if (data.timerAlarmHandledEndAt === endAt) return;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerEndAt = null;
+      timerRemaining = 0;
+      data.timerEndAt = endAt;
+      data.timerRemaining = 0;
+      data.timerAlarmHandledEndAt = endAt;
+      saveData();
+      displayTimer();
+      $("#timer-status").textContent = "Time is up!";
+      startAlarmSound("Timer finished.");
+      void showBrowserNotification("Timer finished", "Your timer is up.");
+    }
+
+    function updateTimer() {
+      if (!timerEndAt) return;
+      timerRemaining = Math.max(0, Math.ceil((timerEndAt - Date.now()) / 1000));
+      displayTimer();
+      if (timerRemaining === 0) finishTimer(timerEndAt);
+    }
+
+    function restoreTimer() {
+      $("#timer-minutes").value = String(Math.floor(timerLength / 60));
+      $("#timer-seconds").value = String(timerLength % 60);
+      if (Number.isFinite(data.timerEndAt) && data.timerEndAt > 0) {
+        if (data.timerAlarmHandledEndAt === data.timerEndAt) {
+          timerEndAt = null;
+          timerRemaining = 0;
+          $("#timer-status").textContent = "Timer finished.";
+          displayTimer();
+          return;
+        }
+        timerEndAt = data.timerEndAt;
+        if (timerEndAt <= Date.now()) {
+          finishTimer(timerEndAt);
+          return;
+        }
+        timerInterval = window.setInterval(updateTimer, 250);
+        $("#timer-status").textContent = "Timer is running.";
+        updateTimer();
+        return;
+      }
+      timerEndAt = null;
+      displayTimer();
+    }
+
     $("#timer-form").addEventListener("submit", (event) => {
       event.preventDefault();
       clearInterval(timerInterval);
+      timerInterval = null;
+      stopAlarmSound();
       const mins = Number($("#timer-minutes").value);
       const secs = Number($("#timer-seconds").value);
       timerLength = Math.max(0, mins * 60 + secs);
       timerRemaining = timerLength;
-      $("#timer-status").textContent = "";
+      timerEndAt = null;
+      data.timerLength = timerLength;
+      data.timerRemaining = timerRemaining;
+      data.timerEndAt = null;
+      delete data.timerAlarmHandledEndAt;
+      saveData();
+      $("#timer-status").textContent = "Timer set.";
       displayTimer();
     });
 
-    $("#timer-start").addEventListener("click", () => {
-      if (timerInterval || timerRemaining <= 0) return;
-      $("#timer-status").textContent = "";
-      timerInterval = setInterval(() => {
-        timerRemaining--;
-        displayTimer();
-        if (timerRemaining <= 0) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-          $("#timer-status").textContent = "Time is up!";
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("Timer finished", { body: "Your timer is up." });
-          }
-        }
-      }, 1000);
+    $("#timer-start").addEventListener("click", async () => {
+      if (timerEndAt || timerRemaining <= 0) return;
+      timerEndAt = Date.now() + timerRemaining * 1000;
+      data.timerLength = timerLength;
+      data.timerRemaining = timerRemaining;
+      data.timerEndAt = timerEndAt;
+      delete data.timerAlarmHandledEndAt;
+      saveData();
+      $("#timer-status").textContent = "Timer is running.";
+      timerInterval = window.setInterval(updateTimer, 250);
+      updateTimer();
+      const notificationRequest = requestNotificationPermission();
+      const audioRequest = prepareAlarmAudio();
+      const [notificationsEnabled, audioEnabled] =
+        await Promise.all([notificationRequest, audioRequest]);
+      if (timerEndAt) {
+        const alarmHelp = [];
+        if (!notificationsEnabled) alarmHelp.push("enable browser notifications");
+        if (!audioEnabled) alarmHelp.push("preview the sound");
+        $("#timer-status").textContent = alarmHelp.length
+          ? "Timer running; " + alarmHelp.join(" and ") + " in Alarm sound settings."
+          : "Timer running. You'll get a browser alert and ringtone when it ends.";
+      }
     });
 
     $("#timer-pause").addEventListener("click", () => {
+      if (!timerEndAt) return;
+      if (timerEndAt <= Date.now()) {
+        updateTimer();
+        return;
+      }
+      timerRemaining = Math.max(0, Math.ceil((timerEndAt - Date.now()) / 1000));
       clearInterval(timerInterval);
       timerInterval = null;
+      timerEndAt = null;
+      data.timerRemaining = timerRemaining;
+      data.timerEndAt = null;
+      saveData();
+      displayTimer();
+      $("#timer-status").textContent = "Timer paused.";
     });
 
     $("#timer-reset").addEventListener("click", () => {
       clearInterval(timerInterval);
       timerInterval = null;
+      stopAlarmSound();
+      timerEndAt = null;
       timerRemaining = timerLength;
-      $("#timer-status").textContent = "";
+      data.timerRemaining = timerRemaining;
+      data.timerEndAt = null;
+      delete data.timerAlarmHandledEndAt;
+      saveData();
+      $("#timer-status").textContent = "Timer reset.";
       displayTimer();
     });
+
+    function checkDueReminders() {
+      const now = Date.now();
+      const dueReminders = data.reminders.filter((reminder) =>
+        reminder.alarmEnabled !== false &&
+        !reminder.notified &&
+        new Date(reminder.date + "T" + reminder.time).getTime() <= now
+      );
+      if (!dueReminders.length) return;
+
+      const dueIds = new Set(dueReminders.map((reminder) => reminder.id));
+      data.reminders = data.reminders.map((reminder) =>
+        dueIds.has(reminder.id) ? { ...reminder, notified: true } : reminder
+      );
+      saveData();
+      renderReminders();
+      renderCalendar();
+
+      const titles = dueReminders.slice(0, 3).map((reminder) => reminder.title);
+      const more = dueReminders.length > titles.length
+        ? " and " + (dueReminders.length - titles.length) + " more"
+        : "";
+      const notificationBody = titles.join(", ") + more;
+      const alertText = dueReminders.length === 1
+        ? "Reminder due: " + dueReminders[0].title
+        : dueReminders.length + " reminders are due.";
+      $("#reminder-alarm-status").textContent = alertText;
+      startAlarmSound(alertText);
+      void showBrowserNotification("Reminder alert", notificationBody);
+    }
 
     $("#notes-text").value = data.notes || "";
     $("#notes-text").addEventListener("input", () => {
@@ -435,14 +2161,15 @@
     }
 
     async function saveVault() {
-      const salt = base64ToBytes(localStorage.getItem(VAULT_KEY).split(".")[0]);
+      const storageKey = vaultStorageKey();
+      const salt = base64ToBytes(localStorage.getItem(storageKey).split(".")[0]);
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const encrypted = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         vaultKey,
         new TextEncoder().encode(JSON.stringify(vaultEntries))
       );
-      localStorage.setItem(VAULT_KEY,
+      localStorage.setItem(storageKey,
         bytesToBase64(salt) + "." + bytesToBase64(iv) + "." + bytesToBase64(encrypted));
     }
 
@@ -500,7 +2227,8 @@
     $("#vault-unlock-form").addEventListener("submit", async (event) => {
       event.preventDefault();
       const password = $("#master-password").value;
-      const stored = localStorage.getItem(VAULT_KEY);
+      const storageKey = vaultStorageKey();
+      const stored = localStorage.getItem(storageKey);
 
       try {
         if (!crypto.subtle) throw new Error("Secure encryption is unavailable in this browser.");
@@ -512,7 +2240,7 @@
           const salt = crypto.getRandomValues(new Uint8Array(16));
           vaultKey = await deriveVaultKey(password, salt);
           vaultEntries = [];
-          localStorage.setItem(VAULT_KEY, bytesToBase64(salt) + "..");
+          localStorage.setItem(storageKey, bytesToBase64(salt) + "..");
           await saveVault();
         } else {
           const [saltText, ivText, encryptedText] = stored.split(".");
@@ -566,14 +2294,351 @@
       renderVault();
     });
 
-    if (localStorage.getItem(VAULT_KEY)) {
-      $("#vault-submit").textContent = "Unlock vault";
+    function renderMemoryGame() {
+      const grid = $("#memory-grid");
+      grid.replaceChildren();
+
+      memoryDeck.forEach((symbol, index) => {
+        const isMatched = memoryMatched.has(index);
+        const isOpen = memoryOpen.includes(index);
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "memory-card";
+        card.textContent = isMatched || isOpen ? symbol : "?";
+        card.setAttribute("aria-label",
+          isMatched || isOpen ? "Card " + (index + 1) + ": " + symbol : "Card " + (index + 1) + ", hidden");
+        if (isMatched) card.classList.add("matched");
+        else if (isOpen) card.classList.add("flipped");
+        card.disabled = memoryLocked || isMatched || isOpen;
+        card.addEventListener("click", () => flipMemoryCard(index));
+        grid.append(card);
+      });
+
+      $("#memory-moves").textContent = String(memoryMoves);
+      $("#memory-pairs").textContent = memoryMatched.size / 2 + " / 8";
     }
 
-    $("#reminder-date").value = new Date().toISOString().slice(0, 10);
-    renderReminders();
-    renderCalendar();
-    displayTimer();
+    function flipMemoryCard(index) {
+      if (memoryLocked || memoryMatched.has(index) || memoryOpen.includes(index)) return;
+      memoryOpen.push(index);
+
+      if (memoryOpen.length === 2) {
+        memoryMoves++;
+        const [first, second] = memoryOpen;
+        if (memoryDeck[first] === memoryDeck[second]) {
+          memoryMatched.add(first);
+          memoryMatched.add(second);
+          memoryOpen = [];
+          $("#memory-status").textContent = memoryMatched.size === memoryDeck.length
+            ? "You found every pair in " + memoryMoves + " moves!"
+            : "Nice match!";
+        } else {
+          memoryLocked = true;
+          $("#memory-status").textContent = "Not a pair. Try again.";
+          renderMemoryGame();
+          memoryTimeout = window.setTimeout(() => {
+            memoryOpen = [];
+            memoryLocked = false;
+            memoryTimeout = null;
+            renderMemoryGame();
+          }, 850);
+          return;
+        }
+      }
+
+      renderMemoryGame();
+    }
+
+    function resetMemoryGame() {
+      window.clearTimeout(memoryTimeout);
+      memoryTimeout = null;
+      memoryDeck = [...memorySymbols, ...memorySymbols];
+      for (let i = memoryDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [memoryDeck[i], memoryDeck[j]] = [memoryDeck[j], memoryDeck[i]];
+      }
+      memoryOpen = [];
+      memoryMatched = new Set();
+      memoryMoves = 0;
+      memoryLocked = false;
+      $("#memory-status").textContent = "Find all eight pairs.";
+      renderMemoryGame();
+    }
+
+    function resetNumberGame() {
+      targetNumber = Math.floor(Math.random() * 100) + 1;
+      guessCount = 0;
+      numberSolved = false;
+      $("#guess-input").value = "";
+      $("#guess-input").disabled = false;
+      $("#guess-form button").disabled = false;
+      $("#guess-status").textContent = "Make your first guess.";
+      $("#guess-attempts").textContent = "Guesses: 0";
+    }
+
+    $("#memory-reset").addEventListener("click", resetMemoryGame);
+    $("#guess-reset").addEventListener("click", () => {
+      resetNumberGame();
+      $("#guess-input").focus();
+    });
+
+    $("#guess-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (numberSolved) return;
+      const guess = Number($("#guess-input").value);
+      if (!Number.isInteger(guess) || guess < 1 || guess > 100) return;
+
+      guessCount++;
+      $("#guess-attempts").textContent = "Guesses: " + guessCount;
+      if (guess === targetNumber) {
+        numberSolved = true;
+        $("#guess-status").textContent = "You got it in " + guessCount + " guesses!";
+        $("#guess-input").disabled = true;
+        $("#guess-form button").disabled = true;
+      } else {
+        $("#guess-status").textContent = guess < targetNumber ? "Too low. Try higher." : "Too high. Try lower.";
+        $("#guess-input").value = "";
+        $("#guess-input").focus();
+      }
+    });
+
+    const tttWinLines = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    function renderTicTacToe() {
+      document.querySelectorAll("[data-ttt-cell]").forEach((cell) => {
+        const index = Number(cell.dataset.tttCell);
+        const value = tttCells[index];
+        cell.textContent = value;
+        cell.disabled = Boolean(value) || tttFinished;
+        cell.setAttribute("aria-label",
+          "Row " + (Math.floor(index / 3) + 1) + ", column " + (index % 3 + 1) +
+          (value ? ": " + value : ": empty"));
+      });
+    }
+
+    function resetTicTacToe() {
+      tttCells = Array(9).fill("");
+      tttTurn = "X";
+      tttFinished = false;
+      $("#ttt-status").textContent = "X goes first.";
+      renderTicTacToe();
+    }
+
+    function playTicTacToe(index) {
+      if (tttFinished || tttCells[index]) return;
+      tttCells[index] = tttTurn;
+      const hasWon = tttWinLines.some((line) => line.every((cell) => tttCells[cell] === tttTurn));
+
+      if (hasWon) {
+        tttFinished = true;
+        $("#ttt-status").textContent = tttTurn + " wins! Start a new game to play again.";
+      } else if (tttCells.every(Boolean)) {
+        tttFinished = true;
+        $("#ttt-status").textContent = "It's a draw! Start a new game to play again.";
+      } else {
+        tttTurn = tttTurn === "X" ? "O" : "X";
+        $("#ttt-status").textContent = tttTurn + "'s turn.";
+      }
+      renderTicTacToe();
+    }
+
+    document.querySelectorAll("[data-ttt-cell]").forEach((cell) => {
+      cell.addEventListener("click", () => playTicTacToe(Number(cell.dataset.tttCell)));
+    });
+    $("#ttt-reset").addEventListener("click", resetTicTacToe);
+
+    const rpsChoices = ["rock", "paper", "scissors"];
+    const rpsNames = { rock: "Rock", paper: "Paper", scissors: "Scissors" };
+
+    function resetRpsScore() {
+      rpsPlayerScore = 0;
+      rpsComputerScore = 0;
+      $("#rps-player-score").textContent = "0";
+      $("#rps-computer-score").textContent = "0";
+      $("#rps-status").textContent = "Make your move!";
+    }
+
+    document.querySelectorAll("[data-rps-choice]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const playerChoice = button.dataset.rpsChoice;
+        const computerChoice = rpsChoices[Math.floor(Math.random() * rpsChoices.length)];
+        let result;
+        if (playerChoice === computerChoice) {
+          result = "It's a tie!";
+        } else if (
+          (playerChoice === "rock" && computerChoice === "scissors") ||
+          (playerChoice === "paper" && computerChoice === "rock") ||
+          (playerChoice === "scissors" && computerChoice === "paper")
+        ) {
+          rpsPlayerScore++;
+          result = "You win this round!";
+        } else {
+          rpsComputerScore++;
+          result = "Computer wins this round!";
+        }
+        $("#rps-player-score").textContent = String(rpsPlayerScore);
+        $("#rps-computer-score").textContent = String(rpsComputerScore);
+        $("#rps-status").textContent =
+          "You chose " + rpsNames[playerChoice] + "; computer chose " +
+          rpsNames[computerChoice] + ". " + result;
+      });
+    });
+    $("#rps-reset").addEventListener("click", resetRpsScore);
+
+    function setNextMathQuestion() {
+      let first = Math.floor(Math.random() * 20) + 1;
+      let second = Math.floor(Math.random() * 20) + 1;
+      const subtract = Math.random() < 0.5;
+      if (subtract && second > first) [first, second] = [second, first];
+      mathAnswer = subtract ? first - second : first + second;
+      $("#math-question").textContent = first + (subtract ? " − " : " + ") + second + " = ?";
+    }
+
+    function resetMathGame() {
+      clearInterval(mathInterval);
+      mathInterval = null;
+      mathRemaining = 30;
+      mathScore = 0;
+      mathRunning = false;
+      $("#math-answer").value = "";
+      $("#math-answer").disabled = true;
+      $("#math-form button").disabled = true;
+      $("#math-score").textContent = "0";
+      $("#math-countdown").textContent = "30";
+      $("#math-question").textContent = "Press Start to begin a round.";
+      $("#math-status").textContent = "Ready when you are.";
+      $("#math-start").textContent = "Start";
+    }
+
+    $("#math-start").addEventListener("click", () => {
+      if (mathInterval) return;
+      if (mathRemaining <= 0) resetMathGame();
+      mathRunning = true;
+      $("#math-answer").disabled = false;
+      $("#math-form button").disabled = false;
+      $("#math-start").textContent = "Playing...";
+      $("#math-status").textContent = "Go!";
+      setNextMathQuestion();
+      $("#math-answer").focus();
+      mathInterval = window.setInterval(() => {
+        mathRemaining--;
+        $("#math-countdown").textContent = String(mathRemaining);
+        if (mathRemaining <= 0) {
+          clearInterval(mathInterval);
+          mathInterval = null;
+          mathRunning = false;
+          $("#math-answer").disabled = true;
+          $("#math-form button").disabled = true;
+          $("#math-question").textContent = "Round over!";
+          $("#math-status").textContent = "Final score: " + mathScore + ".";
+          $("#math-start").textContent = "Play again";
+        }
+      }, 1000);
+    });
+
+    $("#math-reset").addEventListener("click", resetMathGame);
+    $("#math-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!mathRunning) return;
+      if (Number($("#math-answer").value) === mathAnswer) {
+        mathScore++;
+        $("#math-status").textContent = "Correct!";
+        $("#math-score").textContent = String(mathScore);
+      } else {
+        $("#math-status").textContent = "Not quite. Keep going!";
+      }
+      $("#math-answer").value = "";
+      setNextMathQuestion();
+      $("#math-answer").focus();
+    });
+
+    function resetScrambleGame() {
+      currentScrambleWord = scrambleWords[Math.floor(Math.random() * scrambleWords.length)];
+      const letters = Array.from(currentScrambleWord);
+      for (let i = letters.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [letters[i], letters[j]] = [letters[j], letters[i]];
+      }
+      if (letters.join("") === currentScrambleWord) {
+        letters.push(letters.shift());
+      }
+      scrambleSolved = false;
+      $("#scramble-word").textContent = letters.join(" ");
+      $("#scramble-answer").value = "";
+      $("#scramble-answer").disabled = false;
+      $("#scramble-form button").disabled = false;
+      $("#scramble-status").textContent = "What word is it?";
+    }
+
+    $("#scramble-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (scrambleSolved) return;
+      const answer = $("#scramble-answer").value.trim().toLowerCase();
+      if (answer === currentScrambleWord) {
+        scrambleSolved = true;
+        scrambleScore++;
+        $("#scramble-score").textContent = String(scrambleScore);
+        $("#scramble-status").textContent = "You got it! Click New word to keep playing.";
+        $("#scramble-answer").disabled = true;
+        $("#scramble-form button").disabled = true;
+      } else {
+        $("#scramble-status").textContent = "Not that one. Try again!";
+        $("#scramble-answer").select();
+      }
+    });
+    $("#scramble-reset").addEventListener("click", resetScrambleGame);
+
+    function updateConnectionStatus() {
+      const status = $("#connection-status");
+      const offline = !navigator.onLine;
+      status.classList.toggle("offline", offline);
+      status.textContent = offline
+        ? "Offline" + (offlineCopyReady ? " · app cached" : " · current page still works")
+        : "Online" + (offlineCopyReady ? " · offline copy ready" : "");
+    }
+
+    window.addEventListener("online", updateConnectionStatus);
+    window.addEventListener("offline", updateConnectionStatus);
+    updateConnectionStatus();
+
+    if ("serviceWorker" in navigator && location.protocol === "https:") {
+      navigator.serviceWorker.register("./sw.js")
+        .then(() => navigator.serviceWorker.ready)
+        .then(() => {
+          offlineCopyReady = true;
+          updateConnectionStatus();
+        })
+        .catch((error) => {
+          console.error("Offline support could not be enabled.", error);
+          $("#connection-status").textContent = "Online · offline setup failed";
+        });
+    }
+
+    $("#today-label").textContent = new Date().toLocaleDateString(undefined, {
+      weekday: "long", month: "long", day: "numeric"
+    });
+    $("#reminder-date").value = formatLocalDate(new Date());
+    resetMemoryGame();
+    resetNumberGame();
+    resetTicTacToe();
+    resetMathGame();
+    resetScrambleGame();
+    restoreAuthentication();
+    window.setInterval(checkDueReminders, 15000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        updateTimer();
+        checkDueReminders();
+      }
+    });
+    window.addEventListener("pageshow", () => {
+      updateTimer();
+      checkDueReminders();
+    });
   </script>
 </body>
 </html>
