@@ -472,6 +472,31 @@
       letter-spacing: .18em;
       overflow-wrap: anywhere;
     }
+    .todo-item.done .item-details {
+      text-decoration: line-through;
+      opacity: .58;
+    }
+    .game-reaction { background: linear-gradient(145deg, #edf3ff, #dde8ff); }
+    .game-hilo { background: linear-gradient(145deg, #f7efff, #eadfff); }
+    .reaction-button {
+      width: 100%;
+      min-height: 140px;
+      margin: 16px 0 10px;
+      border: 2px solid #ffffff;
+      color: #fff;
+      background: #bd4756;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+    .reaction-button.waiting { background: #bd4756; }
+    .reaction-button.ready { background: #2f9d68; }
+    .hilo-number {
+      margin: 18px 0;
+      font-size: 3.2rem;
+      font-weight: 800;
+      text-align: center;
+    }
+    .hilo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
     .wallpaper-grid {
       display: grid;
@@ -631,6 +656,7 @@
     <button data-page="calendar">Calendar</button>
     <button data-page="timer">Timer</button>
     <button data-page="notes">Notes</button>
+    <button data-page="todos">To-Do</button>
     <button data-page="vault">Password Vault</button>
     <button data-page="games">Games</button>
     <button data-page="backgrounds">Backgrounds</button>
@@ -729,6 +755,16 @@
       <p class="muted">Write a workout plan, shopping list, or anything else. Notes sync to your account and are cached on this device.</p>
       <textarea id="notes-text" placeholder="Write your notes here..."></textarea>
       <p id="notes-status" class="status"></p>
+    </section>
+
+    <section class="panel" id="todos">
+      <h2>To-Do</h2>
+      <p class="muted">Add tasks and check them off as you finish them. Tasks sync with your organizer account and are cached on this device.</p>
+      <form id="todo-form">
+        <input id="todo-text" placeholder="Add a task..." required>
+        <button type="submit">Add task</button>
+      </form>
+      <div id="todo-list"></div>
     </section>
 
     <section class="panel" id="vault">
@@ -848,6 +884,30 @@
           <p class="muted">Solved: <strong id="scramble-score">0</strong></p>
           <button class="secondary" id="scramble-reset" type="button">New word</button>
         </article>
+
+        <article class="game-card game-reaction">
+          <span class="game-icon" aria-hidden="true">⚡</span>
+          <div class="game-label">REACTION TEST</div>
+          <h3>Quick Reaction</h3>
+          <p class="muted">Wait for green, then tap as quickly as you can.</p>
+          <button class="reaction-button waiting" id="reaction-button" type="button">Start</button>
+          <p class="status" id="reaction-status" role="status" aria-live="polite">Ready.</p>
+          <p class="muted">Best time: <strong id="reaction-best">—</strong></p>
+        </article>
+
+        <article class="game-card game-hilo">
+          <span class="game-icon" aria-hidden="true">🔼</span>
+          <div class="game-label">NUMBER CHALLENGE</div>
+          <h3>Higher or Lower</h3>
+          <p class="muted">Predict whether the next number will be higher or lower.</p>
+          <div class="hilo-number" id="hilo-number">50</div>
+          <div class="hilo-actions">
+            <button type="button" id="hilo-higher">Higher</button>
+            <button type="button" id="hilo-lower" class="secondary">Lower</button>
+          </div>
+          <p class="status" id="hilo-status" role="status" aria-live="polite">Choose higher or lower.</p>
+          <p class="muted">Score: <strong id="hilo-score">0</strong> · Best: <strong id="hilo-best">0</strong></p>
+        </article>
       </div>
     </section>
 
@@ -940,7 +1000,7 @@
     }
 
     function emptyOrganizerData() {
-      return { reminders: [], notes: "" };
+      return { reminders: [], todos: [], notes: "" };
     }
 
     function loadData(storageKey) {
@@ -952,7 +1012,8 @@
         return {
           ...emptyOrganizerData(),
           ...stored,
-          reminders: Array.isArray(stored.reminders) ? stored.reminders : []
+          reminders: Array.isArray(stored.reminders) ? stored.reminders : [],
+          todos: Array.isArray(stored.todos) ? stored.todos : []
         };
       } catch {
         return emptyOrganizerData();
@@ -1227,6 +1288,7 @@
       $("#vault-submit").textContent = localStorage.getItem(vaultStorageKey())
         ? "Unlock vault"
         : "Set up vault";
+      renderTodos();
       renderWallpapers();
       checkDueReminders();
     }
@@ -2139,6 +2201,57 @@
       }, 1200);
     });
 
+    function renderTodos() {
+      const list = $("#todo-list");
+      list.replaceChildren();
+      if (!data.todos.length) {
+        list.textContent = "No tasks yet.";
+        return;
+      }
+      data.todos.forEach((todo) => {
+        const row = document.createElement("div");
+        row.className = "item todo-item" + (todo.done ? " done" : "");
+        const details = document.createElement("div");
+        details.className = "item-details";
+        const text = document.createElement("strong");
+        text.textContent = todo.text;
+        details.append(text);
+        const actions = document.createElement("div");
+        actions.className = "item-actions";
+        const toggle = document.createElement("button");
+        toggle.className = "secondary";
+        toggle.type = "button";
+        toggle.textContent = todo.done ? "Undo" : "Complete";
+        toggle.addEventListener("click", () => {
+          todo.done = !todo.done;
+          saveData();
+          renderTodos();
+        });
+        const remove = document.createElement("button");
+        remove.className = "danger";
+        remove.type = "button";
+        remove.textContent = "Delete";
+        remove.addEventListener("click", () => {
+          data.todos = data.todos.filter((item) => item.id !== todo.id);
+          saveData();
+          renderTodos();
+        });
+        actions.append(toggle, remove);
+        row.append(details, actions);
+        list.append(row);
+      });
+    }
+
+    $("#todo-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = $("#todo-text").value.trim();
+      if (!text) return;
+      data.todos.push({ id: makeId(), text, done: false });
+      saveData();
+      event.target.reset();
+      renderTodos();
+    });
+
     function bytesToBase64(bytes) {
       return btoa(String.fromCharCode(...new Uint8Array(bytes)));
     }
@@ -2592,6 +2705,80 @@
     });
     $("#scramble-reset").addEventListener("click", resetScrambleGame);
 
+    let reactionTimeout = null;
+    let reactionReadyAt = 0;
+    let reactionState = "idle";
+    let reactionBest = null;
+
+    $("#reaction-button").addEventListener("click", () => {
+      const button = $("#reaction-button");
+      if (reactionState === "idle" || reactionState === "result") {
+        clearTimeout(reactionTimeout);
+        reactionState = "waiting";
+        button.className = "reaction-button waiting";
+        button.textContent = "Wait...";
+        $("#reaction-status").textContent = "Don't tap yet.";
+        reactionTimeout = window.setTimeout(() => {
+          reactionState = "ready";
+          reactionReadyAt = performance.now();
+          button.className = "reaction-button ready";
+          button.textContent = "Tap now!";
+          $("#reaction-status").textContent = "Go!";
+        }, 1200 + Math.floor(Math.random() * 2800));
+      } else if (reactionState === "waiting") {
+        clearTimeout(reactionTimeout);
+        reactionState = "result";
+        button.className = "reaction-button waiting";
+        button.textContent = "Try again";
+        $("#reaction-status").textContent = "Too soon!";
+      } else {
+        const elapsed = Math.round(performance.now() - reactionReadyAt);
+        reactionState = "result";
+        if (reactionBest === null || elapsed < reactionBest) {
+          reactionBest = elapsed;
+        }
+        button.className = "reaction-button waiting";
+        button.textContent = "Try again";
+        $("#reaction-status").textContent = "Reaction time: " + elapsed + " ms";
+        $("#reaction-best").textContent = reactionBest + " ms";
+      }
+    });
+
+    let hiloCurrent = Math.floor(Math.random() * 100) + 1;
+    let hiloScore = 0;
+    let hiloBest = 0;
+
+    function resetHigherLower() {
+      hiloCurrent = Math.floor(Math.random() * 100) + 1;
+      hiloScore = 0;
+      $("#hilo-number").textContent = String(hiloCurrent);
+      $("#hilo-score").textContent = "0";
+      $("#hilo-status").textContent = "Choose higher or lower.";
+    }
+
+    function playHigherLower(higher) {
+      const next = Math.floor(Math.random() * 100) + 1;
+      const correct = next !== hiloCurrent && (higher ? next > hiloCurrent : next < hiloCurrent);
+      $("#hilo-number").textContent = String(next);
+      if (correct) {
+        hiloScore++;
+        if (hiloScore > hiloBest) {
+          hiloBest = hiloScore;
+          $("#hilo-best").textContent = String(hiloBest);
+        }
+        $("#hilo-status").textContent = "Correct!";
+        $("#hilo-score").textContent = String(hiloScore);
+      } else {
+        $("#hilo-status").textContent = "Not quite. The streak is reset.";
+        hiloScore = 0;
+        $("#hilo-score").textContent = "0";
+      }
+      hiloCurrent = next;
+    }
+
+    $("#hilo-higher").addEventListener("click", () => playHigherLower(true));
+    $("#hilo-lower").addEventListener("click", () => playHigherLower(false));
+
     function updateConnectionStatus() {
       const status = $("#connection-status");
       const offline = !navigator.onLine;
@@ -2622,11 +2809,13 @@
       weekday: "long", month: "long", day: "numeric"
     });
     $("#reminder-date").value = formatLocalDate(new Date());
+    renderTodos();
     resetMemoryGame();
     resetNumberGame();
     resetTicTacToe();
     resetMathGame();
     resetScrambleGame();
+    resetHigherLower();
     restoreAuthentication();
     window.setInterval(checkDueReminders, 15000);
     document.addEventListener("visibilitychange", () => {
